@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MCP Server Manager</title>
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -16,8 +15,8 @@
         
         <!-- Navigation -->
         <div class="tabs">
-            <button class="tab active" onclick="showView('servers', this)">Servers</button>
-            <button class="tab" onclick="showView('tools', this)">Tools</button>
+            <button class="tab active" onclick="window.showView('servers', this)">Servers</button>
+            <button class="tab" onclick="window.showView('tools', this)">Tools</button>
         </div>
 
         <!-- Servers View -->
@@ -27,9 +26,9 @@
         <div id="toolsView" style="display: none;"></div>
 
         <!-- Save Button -->
-        <button class="save-button" onclick="saveChanges()">Save Changes</button>
+        <button class="save-button" onclick="window.saveChanges()">Save Changes</button>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

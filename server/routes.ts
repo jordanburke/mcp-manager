@@ -1,4 +1,5 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -6,9 +7,37 @@ import { fileURLToPath } from 'url';
 const router = express.Router();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Define types for our application
+interface ConfigPaths {
+  CURSOR_CONFIG_PATH: string;
+  CLAUDE_CONFIG_PATH: string;
+}
+
+interface ServerConfig {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+  disabled?: boolean;
+}
+
+interface MCPConfig {
+  mcpServers: Record<string, ServerConfig>;
+}
+
+interface Tool {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: string;
+    properties: Record<string, any>;
+    required: string[];
+  };
+  server?: string;
+}
+
 // Get config file paths based on OS
-function getConfigPaths() {
-    const home = process.env.HOME || process.env.USERPROFILE;
+function getConfigPaths(): ConfigPaths {
+    const home = process.env.HOME || process.env.USERPROFILE || '';
     const isMac = process.platform === 'darwin';
     
     if (isMac) {
@@ -33,12 +62,12 @@ function getConfigPaths() {
 const { CURSOR_CONFIG_PATH, CLAUDE_CONFIG_PATH } = getConfigPaths();
 
 // Helper function to read config files
-async function readConfigFile(filePath) {
+async function readConfigFile(filePath: string): Promise<MCPConfig> {
     try {
         console.log('Reading config file:', filePath);
         const data = await fs.readFile(filePath, 'utf8');
         return JSON.parse(data);
-    } catch (error) {
+    } catch (error: any) {
         if (error.code === 'ENOENT') {
             console.log('No existing config found, using empty config');
             return { mcpServers: {} };
@@ -49,12 +78,12 @@ async function readConfigFile(filePath) {
 }
 
 // Helper function to merge configurations
-function mergeConfigs(savedConfig, defaultConfig) {
+function mergeConfigs(savedConfig: MCPConfig, defaultConfig: Record<string, ServerConfig>): MCPConfig {
     console.log('Merging configs:');
     console.log('Saved servers:', Object.keys(savedConfig.mcpServers || {}));
     console.log('Default servers:', Object.keys(defaultConfig));
     
-    const mergedServers = {};
+    const mergedServers: Record<string, ServerConfig> = {};
     
     // Start with all default servers
     Object.entries(defaultConfig).forEach(([name, config]) => {
@@ -74,8 +103,8 @@ function mergeConfigs(savedConfig, defaultConfig) {
 }
 
 // Helper function to filter out disabled servers
-function filterDisabledServers(config) {
-    const filteredConfig = { mcpServers: {} };
+function filterDisabledServers(config: MCPConfig): MCPConfig {
+    const filteredConfig: MCPConfig = { mcpServers: {} };
     
     Object.entries(config.mcpServers).forEach(([name, server]) => {
         // Only include servers that are not disabled
@@ -93,43 +122,43 @@ function filterDisabledServers(config) {
 }
 
 // Get cursor config
-router.get('/cursor-config', async (req, res) => {
+router.get('/cursor-config', async (req: Request, res: Response) => {
     console.log('Handling /api/cursor-config request');
     try {
         const savedConfig = await readConfigFile(CURSOR_CONFIG_PATH);
-        const defaultConfig = await readConfigFile(path.join(__dirname, 'config.json'));
+        const defaultConfig = await readConfigFile(path.join(__dirname, '../config.json'));
         const mergedConfig = mergeConfigs(savedConfig, defaultConfig.mcpServers || {});
         console.log('Returning merged config with servers:', Object.keys(mergedConfig.mcpServers));
         res.json(mergedConfig);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error in /api/cursor-config:', error);
         res.status(500).json({ error: `Failed to read Cursor config: ${error.message}` });
     }
 });
 
 // Get claude config
-router.get('/claude-config', async (req, res) => {
+router.get('/claude-config', async (req: Request, res: Response) => {
     console.log('Handling /api/claude-config request');
     try {
         const config = await readConfigFile(CLAUDE_CONFIG_PATH);
         res.json(config);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error in /api/claude-config:', error);
         res.status(500).json({ error: `Failed to read Claude config: ${error.message}` });
     }
 });
 
 // Get tools list
-router.get('/tools', async (req, res) => {
+router.get('/tools', async (req: Request, res: Response) => {
     console.log('Handling /api/tools request');
     try {
         const cursorConfig = await readConfigFile(CURSOR_CONFIG_PATH);
-        const defaultConfig = await readConfigFile(path.join(__dirname, 'config.json'));
+        const defaultConfig = await readConfigFile(path.join(__dirname, '../config.json'));
         const mergedConfig = mergeConfigs(cursorConfig, defaultConfig.mcpServers || {});
         const servers = mergedConfig.mcpServers;
 
         // Define available tools for each server
-        const toolsMap = {
+        const toolsMap: Record<string, Tool[]> = {
             'mcp-manager': [{
                 name: 'launch_manager',
                 description: 'Launch the MCP Server Manager interface',
@@ -155,23 +184,23 @@ router.get('/tools', async (req, res) => {
 
         console.log(`Returning ${enabledTools.length} tools`);
         res.json(enabledTools);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error in /api/tools:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
 // Save configs
-router.post('/save-configs', async (req, res) => {
+router.post('/save-configs', async (req: Request, res: Response) => {
     console.log('Handling /api/save-configs request');
     try {
-        const { mcpServers } = req.body;
+        const { mcpServers } = req.body as { mcpServers?: Record<string, ServerConfig> };
         if (!mcpServers) {
             throw new Error('No server configuration provided');
         }
 
         // Save full config to Cursor settings (for UI state)
-        const fullConfig = { mcpServers };
+        const fullConfig: MCPConfig = { mcpServers };
         await fs.writeFile(CURSOR_CONFIG_PATH, JSON.stringify(fullConfig, null, 2));
 
         // Save filtered config to Claude settings (removing disabled servers)
@@ -184,7 +213,7 @@ router.post('/save-configs', async (req, res) => {
             success: true, 
             message: 'Configurations saved successfully. Please restart Claude to apply changes.' 
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error in /api/save-configs:', error);
         res.status(500).json({ error: `Failed to save configurations: ${error.message}` });
     }

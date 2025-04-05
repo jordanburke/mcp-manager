@@ -1,4 +1,5 @@
 import express from 'express';
+import type { Request, Response } from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import apiRoutes from './routes.js';
@@ -15,15 +16,15 @@ app.use(express.urlencoded({ extended: true }));
 console.log('Mounting API routes at /api');
 app.use('/api', apiRoutes);
 
-// Static file serving
-const staticDir = __dirname;
+// Static file serving - now from the dist directory (Vite build output)
+const staticDir = path.join(__dirname, '../dist');
 console.log('Setting up static file serving from:', staticDir);
 app.use(express.static(staticDir));
 
 // Serve index.html for all other routes
-app.get('*', (req, res) => {
+app.get('*', (req: Request, res: Response) => {
     console.log('Serving index.html for:', req.path);
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
 });
 
 // Start server

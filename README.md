@@ -61,6 +61,67 @@ The MCP Server Manager uses two configuration files:
 }
 ```
 
+## Development
+
+This project uses TypeScript and Vite for development, which provides:
+- Static typing with TypeScript
+- Fast Hot Module Replacement (HMR)
+- Modern development experience
+- Optimized production builds
+
+### Setup
+
+1. Install dependencies:
+```bash
+pnpm install
+```
+
+2. Create a `config.json` file:
+```bash
+cp config.example.json config.json
+```
+Then edit the file to include your MCP server configurations.
+
+### Development Workflow
+
+There are several ways to run the project:
+
+1. **Full Development Mode** (recommended):
+   This runs both the backend server and the Vite dev server with hot reloading.
+   ```bash
+   pnpm dev:full
+   ```
+   - Backend API: http://localhost:3456
+   - Frontend dev server: http://localhost:5173
+
+2. **Frontend Development Only**:
+   ```bash
+   pnpm dev
+   ```
+   This starts the Vite dev server only. API calls are proxied to the backend.
+
+3. **Backend Development Only**:
+   ```bash
+   pnpm server
+   ```
+   This starts the backend server with nodemon for auto-reloading.
+
+### Building for Production
+
+To build the frontend for production:
+```bash
+pnpm build
+```
+
+This will create optimized files in the `dist` directory and compile the TypeScript server code to JavaScript in the `dist-server` directory.
+
+To run the production version:
+```bash
+pnpm start
+```
+
+This will serve the built frontend from the `dist` directory and start the backend server.
+
 ## Usage
 
 1. Launch the MCP Server Manager

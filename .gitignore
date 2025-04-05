@@ -32,5 +32,6 @@ Thumbs.db
 
 # Build output
 dist/
+dist-server/
 build/
 *.log

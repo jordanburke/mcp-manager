@@ -1,6 +1,36 @@
-let mcpServers = {};
-let originalConfig = {};
-let toolsList = [];
+import './style.css';
+
+interface ServerConfig {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+  disabled?: boolean;
+}
+
+interface MCPConfig {
+  mcpServers: Record<string, ServerConfig>;
+}
+
+interface Tool {
+  name: string;
+  description: string;
+  inputSchema: {
+    type: string;
+    properties: Record<string, any>;
+    required: string[];
+  };
+  server: string;
+}
+
+interface SaveResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+
+let mcpServers: Record<string, ServerConfig> = {};
+let originalConfig: Record<string, ServerConfig> = {};
+let toolsList: Tool[] = [];
 
 // API endpoints
 const API = {
@@ -10,20 +40,35 @@ const API = {
     SAVE_CONFIGS: '/api/save-configs'
 };
 
-function showMessage(message, isError = true) {
+// Expose functions to window for HTML event handlers
+declare global {
+    interface Window {
+        showView: (view: string, clickedTab: HTMLElement) => void;
+        toggleServer: (name: string, enabled: boolean) => void;
+        saveChanges: () => Promise<void>;
+    }
+}
+
+window.showView = showView;
+window.toggleServer = toggleServer;
+window.saveChanges = saveChanges;
+
+function showMessage(message: string, isError = true): void {
     const messageDiv = document.getElementById(isError ? 'errorMessage' : 'successMessage');
     const otherDiv = document.getElementById(isError ? 'successMessage' : 'errorMessage');
     
-    messageDiv.textContent = message;
-    messageDiv.style.display = 'block';
-    otherDiv.style.display = 'none';
-    
-    setTimeout(() => {
-        messageDiv.style.display = 'none';
-    }, 10000); // Show for 10 seconds
+    if (messageDiv && otherDiv) {
+        messageDiv.textContent = message;
+        messageDiv.style.display = 'block';
+        otherDiv.style.display = 'none';
+        
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 10000); // Show for 10 seconds
+    }
 }
 
-async function fetchWithTimeout(url, options = {}) {
+async function fetchWithTimeout<T>(url: string, options: RequestInit & { timeout?: number } = {}): Promise<T> {
     const timeout = options.timeout || 5000;
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
@@ -43,7 +88,7 @@ async function fetchWithTimeout(url, options = {}) {
         
         const data = await response.json();
         console.log('Response data:', data);
-        return data;
+        return data as T;
     } catch (error) {
         clearTimeout(id);
         console.error('Fetch error:', error);
@@ -51,12 +96,12 @@ async function fetchWithTimeout(url, options = {}) {
     }
 }
 
-async function loadConfigs() {
+async function loadConfigs(): Promise<void> {
     console.log('Loading configurations...');
     try {
         // Load cursor config first
         console.log('Fetching cursor config from:', API.CURSOR_CONFIG);
-        const cursorConfig = await fetchWithTimeout(API.CURSOR_CONFIG);
+        const cursorConfig = await fetchWithTimeout<MCPConfig>(API.CURSOR_CONFIG);
         console.log('Received cursor config:', cursorConfig);
         
         if (!cursorConfig.mcpServers) {
@@ -74,7 +119,7 @@ async function loadConfigs() {
         // Load tools in background
         try {
             console.log('Fetching tools from:', API.TOOLS);
-            toolsList = await fetchWithTimeout(API.TOOLS);
+            toolsList = await fetchWithTimeout<Tool[]>(API.TOOLS);
             console.log('Loaded tools:', toolsList);
             renderTools();
         } catch (error) {
@@ -87,25 +132,32 @@ async function loadConfigs() {
     }
 }
 
-function showView(view, clickedTab) {
+function showView(view: string, clickedTab: HTMLElement): void {
     console.log('Switching view to:', view);
     // Update tabs
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     clickedTab.classList.add('active');
 
     // Update views
-    document.getElementById('serversView').style.display = view === 'servers' ? 'grid' : 'none';
-    document.getElementById('toolsView').style.display = view === 'tools' ? 'block' : 'none';
+    const serversView = document.getElementById('serversView');
+    const toolsView = document.getElementById('toolsView');
+    
+    if (serversView && toolsView) {
+        serversView.style.display = view === 'servers' ? 'grid' : 'none';
+        toolsView.style.display = view === 'tools' ? 'block' : 'none';
 
-    // Refresh tools view when switching to it
-    if (view === 'tools') {
-        renderTools();
+        // Refresh tools view when switching to it
+        if (view === 'tools') {
+            renderTools();
+        }
     }
 }
 
-function renderServers() {
+function renderServers(): void {
     console.log('Rendering servers view with servers:', Object.keys(mcpServers));
     const grid = document.getElementById('serversView');
+    if (!grid) return;
+    
     grid.innerHTML = '';
 
     // Sort servers alphabetically
@@ -144,9 +196,11 @@ function renderServers() {
     });
 }
 
-function renderTools() {
+function renderTools(): void {
     console.log('Rendering tools view');
     const toolsView = document.getElementById('toolsView');
+    if (!toolsView) return;
+    
     toolsView.innerHTML = '';
 
     if (!toolsList || toolsList.length === 0) {
@@ -155,7 +209,7 @@ function renderTools() {
     }
 
     // Group tools by server
-    const toolsByServer = toolsList.reduce((acc, tool) => {
+    const toolsByServer = toolsList.reduce<Record<string, Tool[]>>((acc, tool) => {
         if (!acc[tool.server]) {
             acc[tool.server] = [];
         }
@@ -188,44 +242,41 @@ function renderTools() {
     });
 }
 
-function toggleServer(name, enabled) {
+function toggleServer(name: string, enabled: boolean): void {
     console.log('Toggling server:', name, enabled);
     if (mcpServers[name]) {
         mcpServers[name].disabled = !enabled;
     }
 }
 
-async function saveChanges() {
+async function saveChanges(): Promise<void> {
     console.log('Saving changes...');
     try {
-        const result = await fetchWithTimeout(API.SAVE_CONFIGS, {
+        const result = await fetchWithTimeout<SaveResponse>(API.SAVE_CONFIGS, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ mcpServers })
         });
-
-        originalConfig = JSON.parse(JSON.stringify(mcpServers));
-        showMessage(result.message || 'Configurations saved successfully. Please restart Claude to apply changes.', false);
         
-        // Refresh tools list to reflect enabled/disabled servers
-        const updatedTools = await fetchWithTimeout(API.TOOLS);
-        toolsList = updatedTools;
-        if (document.getElementById('toolsView').style.display !== 'none') {
-            renderTools();
+        if (result.success) {
+            showMessage(result.message, false);
+            // Update original config to match current state
+            originalConfig = JSON.parse(JSON.stringify(mcpServers));
+        } else {
+            showMessage(result.error || 'Unknown error occurred');
         }
     } catch (error) {
-        console.error('Error saving configs:', error);
-        showMessage('Error saving configurations: ' + error.message);
+        console.error('Error saving changes:', error);
+        if (error instanceof Error) {
+            showMessage(`Failed to save changes: ${error.message}`);
+        } else {
+            showMessage('Failed to save changes: Unknown error');
+        }
     }
 }
 
 // Initialize the app
 console.log('Initializing MCP Manager...');
 window.onload = loadConfigs;
-
-// Export functions for global access
-window.showView = showView;
-window.toggleServer = toggleServer;
-window.saveChanges = saveChanges;
