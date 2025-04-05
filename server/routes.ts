@@ -24,6 +24,14 @@ interface MCPConfig {
   mcpServers: Record<string, ServerConfig>;
 }
 
+interface ServerState {
+  disabled: boolean;
+}
+
+interface MCPState {
+  serverStates: Record<string, ServerState>;
+}
+
 interface Tool {
   name: string;
   description: string;
@@ -34,6 +42,9 @@ interface Tool {
   };
   server?: string;
 }
+
+// Path to the state file that will store enabled/disabled status
+const STATE_FILE_PATH = path.join(__dirname, '../server-state.json');
 
 // Get config file paths based on OS
 function getConfigPaths(): ConfigPaths {
@@ -77,11 +88,44 @@ async function readConfigFile(filePath: string): Promise<MCPConfig> {
     }
 }
 
-// Helper function to merge configurations
-function mergeConfigs(savedConfig: MCPConfig, defaultConfig: Record<string, ServerConfig>): MCPConfig {
-    console.log('Merging configs:');
-    console.log('Saved servers:', Object.keys(savedConfig.mcpServers || {}));
-    console.log('Default servers:', Object.keys(defaultConfig));
+// Helper function to read server state file
+async function readStateFile(): Promise<MCPState> {
+    try {
+        console.log('Reading state file:', STATE_FILE_PATH);
+        const data = await fs.readFile(STATE_FILE_PATH, 'utf8');
+        return JSON.parse(data);
+    } catch (error: any) {
+        if (error.code === 'ENOENT') {
+            console.log('No existing state file found, creating empty state');
+            // Create an empty state file
+            const emptyState: MCPState = { serverStates: {} };
+            await fs.writeFile(STATE_FILE_PATH, JSON.stringify(emptyState, null, 2));
+            return emptyState;
+        }
+        console.error(`Error reading state file:`, error);
+        throw error;
+    }
+}
+
+// Helper function to write server state file
+async function writeStateFile(state: MCPState): Promise<void> {
+    try {
+        console.log('Writing state file:', STATE_FILE_PATH);
+        await fs.writeFile(STATE_FILE_PATH, JSON.stringify(state, null, 2));
+        console.log('State file written successfully');
+    } catch (error) {
+        console.error(`Error writing state file:`, error);
+        throw error;
+    }
+}
+
+// Helper function to merge configurations with state
+async function mergeConfigsWithState(savedConfig: MCPConfig, defaultConfig: Record<string, ServerConfig>): Promise<MCPConfig> {
+    console.log('Merging configs with state:');
+    
+    // Read the server state file
+    const state = await readStateFile();
+    console.log('Server states:', Object.keys(state.serverStates || {}));
     
     const mergedServers: Record<string, ServerConfig> = {};
     
@@ -98,7 +142,14 @@ function mergeConfigs(savedConfig: MCPConfig, defaultConfig: Record<string, Serv
         };
     });
     
-    console.log('Merged servers:', Object.keys(mergedServers));
+    // Apply disabled state from state file
+    Object.entries(state.serverStates || {}).forEach(([name, serverState]) => {
+        if (mergedServers[name]) {
+            mergedServers[name].disabled = serverState.disabled;
+        }
+    });
+    
+    console.log('Merged servers with state:', Object.keys(mergedServers));
     return { mcpServers: mergedServers };
 }
 
@@ -121,13 +172,23 @@ function filterDisabledServers(config: MCPConfig): MCPConfig {
     return filteredConfig;
 }
 
+// Helper function to check if a file exists
+async function fileExists(filePath: string): Promise<boolean> {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 // Get cursor config
-router.get('/cursor-config', async (req: Request, res: Response) => {
+router.get('/cursor-config', async (_req: Request, res: Response) => {
     console.log('Handling /api/cursor-config request');
     try {
         const savedConfig = await readConfigFile(CURSOR_CONFIG_PATH);
         const defaultConfig = await readConfigFile(path.join(__dirname, '../config.json'));
-        const mergedConfig = mergeConfigs(savedConfig, defaultConfig.mcpServers || {});
+        const mergedConfig = await mergeConfigsWithState(savedConfig, defaultConfig.mcpServers || {});
         console.log('Returning merged config with servers:', Object.keys(mergedConfig.mcpServers));
         res.json(mergedConfig);
     } catch (error: any) {
@@ -137,7 +198,7 @@ router.get('/cursor-config', async (req: Request, res: Response) => {
 });
 
 // Get claude config
-router.get('/claude-config', async (req: Request, res: Response) => {
+router.get('/claude-config', async (_req: Request, res: Response) => {
     console.log('Handling /api/claude-config request');
     try {
         const config = await readConfigFile(CLAUDE_CONFIG_PATH);
@@ -149,12 +210,12 @@ router.get('/claude-config', async (req: Request, res: Response) => {
 });
 
 // Get tools list
-router.get('/tools', async (req: Request, res: Response) => {
+router.get('/tools', async (_req: Request, res: Response) => {
     console.log('Handling /api/tools request');
     try {
         const cursorConfig = await readConfigFile(CURSOR_CONFIG_PATH);
         const defaultConfig = await readConfigFile(path.join(__dirname, '../config.json'));
-        const mergedConfig = mergeConfigs(cursorConfig, defaultConfig.mcpServers || {});
+        const mergedConfig = await mergeConfigsWithState(cursorConfig, defaultConfig.mcpServers || {});
         const servers = mergedConfig.mcpServers;
 
         // Define available tools for each server
@@ -199,19 +260,53 @@ router.post('/save-configs', async (req: Request, res: Response) => {
             throw new Error('No server configuration provided');
         }
 
-        // Save full config to Cursor settings (for UI state)
+        // Check if the config files exist before writing to them
+        const cursorConfigExists = await fileExists(CURSOR_CONFIG_PATH);
+        const claudeConfigExists = await fileExists(CLAUDE_CONFIG_PATH);
+
+        // Always update the state file with disabled status
+        const state: MCPState = { serverStates: {} };
+        
+        // Extract disabled state for each server
+        Object.entries(mcpServers).forEach(([name, config]) => {
+            state.serverStates[name] = {
+                disabled: !!config.disabled
+            };
+        });
+        
+        // Write the state file
+        await writeStateFile(state);
+        console.log('Server state saved successfully');
+
+        if (!cursorConfigExists && !claudeConfigExists) {
+            return res.json({
+                success: true,
+                message: 'Server state saved successfully. No configuration files were found to update.'
+            });
+        }
+
+        // Save full config to Cursor settings (for UI state) if it exists
         const fullConfig: MCPConfig = { mcpServers };
-        await fs.writeFile(CURSOR_CONFIG_PATH, JSON.stringify(fullConfig, null, 2));
+        if (cursorConfigExists) {
+            await fs.writeFile(CURSOR_CONFIG_PATH, JSON.stringify(fullConfig, null, 2));
+            console.log('Cursor configuration saved successfully');
+        } else {
+            console.log('Skipping Cursor config save as file does not exist');
+        }
 
-        // Save filtered config to Claude settings (removing disabled servers)
-        const filteredConfig = filterDisabledServers(fullConfig);
-        console.log('Filtered config for Claude:', JSON.stringify(filteredConfig, null, 2));
-        await fs.writeFile(CLAUDE_CONFIG_PATH, JSON.stringify(filteredConfig, null, 2));
+        // Save filtered config to Claude settings (removing disabled servers) if it exists
+        if (claudeConfigExists) {
+            const filteredConfig = filterDisabledServers(fullConfig);
+            console.log('Filtered config for Claude:', JSON.stringify(filteredConfig, null, 2));
+            await fs.writeFile(CLAUDE_CONFIG_PATH, JSON.stringify(filteredConfig, null, 2));
+            console.log('Claude configuration saved successfully');
+        } else {
+            console.log('Skipping Claude config save as file does not exist');
+        }
 
-        console.log('Configurations saved successfully');
         res.json({ 
             success: true, 
-            message: 'Configurations saved successfully. Please restart Claude to apply changes.' 
+            message: `Configurations saved successfully${!cursorConfigExists || !claudeConfigExists ? ' (some files were not found)' : ''}. Please restart Claude to apply changes.` 
         });
     } catch (error: any) {
         console.error('Error in /api/save-configs:', error);

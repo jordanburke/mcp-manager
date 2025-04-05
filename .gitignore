@@ -11,6 +11,7 @@ yarn-error.log
 
 # Config files with sensitive data
 config.json
+server-state.json
 
 # Editor directories and files
 .idea/

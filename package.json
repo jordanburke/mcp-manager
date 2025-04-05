@@ -31,11 +31,11 @@
   },
   "devDependencies": {
     "@types/express": "^4.17.17",
-    "@types/node": "^20.4.5",
+    "@types/node": "^22.14.0",
     "concurrently": "^8.2.0",
-    "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.6",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "vite": "^6.2.5"
   },
   "repository": {
