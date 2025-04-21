@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { AppShell, Header, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack } from "@mantine/core"
-import { Button } from "./components/ui/button"
+import { AppShell, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack, Button } from "@mantine/core"
 import ServerManager from "./components/mcp/ServerManager"
 
 // Declare a type for the window with electron property
@@ -90,11 +89,11 @@ const App: React.FC = () => {
             <Group>
               <Button
                 variant={activeView === "manager" ? "default" : "outline"}
-                onClick={() => setActiveView("manager")}
+                onClick={(event) => setActiveView("manager")}
               >
                 Visual Editor
               </Button>
-              <Button variant={activeView === "json" ? "default" : "outline"} onClick={() => setActiveView("json")}>
+              <Button variant={activeView === "json" ? "default" : "outline"} onClick={(event) => setActiveView("json")}>
                 View JSON
               </Button>
             </Group>
@@ -113,7 +112,7 @@ const App: React.FC = () => {
                   <Title order={2} size="h3">
                     Configuration JSON File
                   </Title>
-                  <Button onClick={loadJsonData} disabled={isLoading}>
+                  <Button onClick={(event) => loadJsonData()} disabled={isLoading}>
                     {isLoading ? "Loading..." : "Reload"}
                   </Button>
                 </Group>
