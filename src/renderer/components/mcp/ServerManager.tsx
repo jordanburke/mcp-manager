@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from "react"
-import { Container, Title, Group, Paper, Text, Box, Loader, Button, Stack, Table } from "@mantine/core"
+import {
+  Container,
+  Title,
+  Group,
+  Paper,
+  Text,
+  Box,
+  Loader,
+  Button,
+  Stack,
+  Table,
+  Tooltip,
+  Flex,
+  Card,
+  Badge,
+  Divider
+} from "@mantine/core"
+import { IconRefresh, IconFilePlus, IconPlus } from '@tabler/icons-react'
 import ServerCard from "./ServerCard"
 import ServerDialog from "./ServerDialog"
 import DeleteConfirmDialog from "./DeleteConfirmDialog"
 import ImportJsonDialog from "./ImportJsonDialog"
 import * as mcpService from "../../services/mcpService"
-import { EditableMCPServer, MCPServer, MCPConfig, ServerStatus } from "../../types/mcp"
+import { EditableMCPServer, MCPServer, MCPConfig, ServerStatus } from "@/types/mcp"
 
 const ServerManager: React.FC = () => {
   const [servers, setServers] = useState<Record<string, MCPServer>>({})
@@ -195,54 +212,102 @@ const ServerManager: React.FC = () => {
 
   if (error) {
     return (
-      <Box ta="center" py="xl">
-        <Title order={2} mb="xs">
-          Error Loading Servers
-        </Title>
-        <Text mb="md" c="dimmed">
-          {error}
-        </Text>
-        <Button variant="outline" onClick={loadServers}>
-          Try Again
-        </Button>
-      </Box>
+      <Card p="xl" radius="md" withBorder shadow="sm">
+        <Stack align="center" m="md">
+          <Title order={2} size="h4" c="red">
+            Error Loading Servers
+          </Title>
+          <Text c="dimmed">
+            {error}
+          </Text>
+          <Button variant="light" color="blue" onClick={loadServers} radius="md">
+            Try Again
+          </Button>
+        </Stack>
+      </Card>
     )
   }
 
   return (
-    <Box p="md">
-      <Group justify="space-between" align="center" mb="md">
-        <Title order={2} size="h3">
-          MCP Servers
-        </Title>
-        <Group>
-          <Button variant="outline" onClick={checkAllServerStatuses}>
-            Check All Statuses
-          </Button>
-          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-            Paste from JSON
-          </Button>
-          <Button onClick={() => setIsAddDialogOpen(true)}>+ Add Server</Button>
+    <Stack m="md">
+      <Card p="md" radius="md" withBorder shadow="sm">
+        <Group justify="space-between" align="center">
+          <Group>
+            <Title order={2} size="h4">
+              MCP Servers
+            </Title>
+            <Badge size="md" variant="light">
+              {serverIds.length} {serverIds.length === 1 ? 'server' : 'servers'}
+            </Badge>
+          </Group>
+          <Group>
+            <Tooltip label="Check all server statuses">
+              <Button
+                variant="light"
+                onClick={checkAllServerStatuses}
+                leftSection={<IconRefresh size={16} />}
+                radius="md"
+                size="sm"
+              >
+                Check All Statuses
+              </Button>
+            </Tooltip>
+            <Tooltip label="Import servers from JSON">
+              <Button
+                variant="light"
+                onClick={() => setIsImportDialogOpen(true)}
+                leftSection={<IconFilePlus size={16} />}
+                radius="md"
+                size="sm"
+              >
+                Paste from JSON
+              </Button>
+            </Tooltip>
+            <Tooltip label="Add a new server">
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                leftSection={<IconPlus size={16} />}
+                radius="md"
+                size="sm"
+              >
+                Add Server
+              </Button>
+            </Tooltip>
+          </Group>
         </Group>
-      </Group>
+      </Card>
 
       {serverIds.length === 0 ? (
-        <Paper p="xl" withBorder ta="center">
-          <Title order={3} mb="xs">
-            No MCP Servers Configured
-          </Title>
-          <Text mb="md" c="dimmed">
-            MCP servers are used to manage your cluster configuration.
-          </Text>
-          <Group justify="center">
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-              Paste from JSON
-            </Button>
-            <Button onClick={() => setIsAddDialogOpen(true)}>+ Add Your First Server</Button>
-          </Group>
-        </Paper>
+        <Card p="xl" withBorder radius="md" shadow="sm">
+          <Stack align="center" m="lg">
+            <Title order={3} size="h5">
+              No MCP Servers Configured
+            </Title>
+            <Text c="dimmed" ta="center" maw={500}>
+              MCP servers are used to manage your cluster configuration.
+              Add your first server or import from JSON to get started.
+            </Text>
+            <Group justify="center">
+              <Button
+                variant="light"
+                onClick={() => setIsImportDialogOpen(true)}
+                leftSection={<IconFilePlus size={16} />}
+                radius="md"
+              >
+                Paste from JSON
+              </Button>
+              <Button
+                onClick={() => setIsAddDialogOpen(true)}
+                leftSection={<IconPlus size={16} />}
+                radius="md"
+              >
+                Add Your First Server
+              </Button>
+            </Group>
+          </Stack>
+        </Card>
       ) : (
-        <Paper withBorder>
+        <Card p={0} withBorder radius="md" shadow="sm">
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
@@ -270,7 +335,7 @@ const ServerManager: React.FC = () => {
               ))}
             </Table.Tbody>
           </Table>
-        </Paper>
+        </Card>
       )}
 
       <ServerDialog
@@ -307,7 +372,7 @@ const ServerManager: React.FC = () => {
         onClose={() => setIsImportDialogOpen(false)}
         onImport={handleImportFromJson}
       />
-    </Box>
+    </Stack>
   )
 }
 

@@ -36,6 +36,7 @@
     "@mantine/core": "^7.17.4",
     "@mantine/hooks": "^7.17.4",
     "@radix-ui/react-slot": "^1.0.2",
+    "@tabler/icons-react": "^3.31.0",
     "@types/node": "^20.10.6",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",

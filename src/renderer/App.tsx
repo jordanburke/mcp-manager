@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from "react"
-import { AppShell, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack, Button, SegmentedControl, useMantineColorScheme } from "@mantine/core"
+import {
+  AppShell,
+  Container,
+  Title,
+  Group,
+  Paper,
+  Text,
+  Code,
+  Box,
+  Loader,
+  Stack,
+  Button,
+  SegmentedControl,
+  useMantineColorScheme,
+  rem,
+  Transition,
+  Flex
+} from "@mantine/core"
 import ServerManager from "./components/mcp/ServerManager"
 import {MantineColorScheme} from "@mantine/core/lib/core/MantineProvider/theme.types";
+import { IconServer, IconCode } from '@tabler/icons-react';
 
 // Declare a type for the window with electron property
 declare global {
@@ -81,13 +99,31 @@ const App: React.FC = () => {
   }, [activeView])
 
   return (
-    <AppShell header={{ height: 80 }} padding="md">
-      <AppShell.Header>
-        <Container size="xl" py="md">
-          <Group justify="space-between" align="center">
-            <Title order={1} size="h2">
-              MCP Manager
-            </Title>
+    <AppShell
+      header={{ height: 70 }}
+      padding="md"
+      styles={(theme) => ({
+        main: {
+          backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+        },
+      })}
+    >
+      <AppShell.Header
+        style={{
+          background: colorScheme === 'dark'
+            ? 'linear-gradient(to right, #1A1B1E, #25262b)'
+            : 'linear-gradient(to right, #f8f9fa, #e9ecef)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Container size="xl" h="100%">
+          <Flex justify="space-between" align="center" h="100%">
+            <Group>
+              <Title order={1} size="h3" style={{ letterSpacing: '-0.5px' }}>
+                MCP Manager
+              </Title>
+            </Group>
+
             <Group>
               <SegmentedControl
                 value={colorScheme}
@@ -97,80 +133,124 @@ const App: React.FC = () => {
                   { value: 'auto', label: 'System' },
                   { value: 'dark', label: 'Dark' },
                 ]}
+                size="xs"
+                radius="md"
               />
-              <Button
-                variant={activeView === "manager" ? "default" : "outline"}
-                onClick={(event) => setActiveView("manager")}
-              >
-                Visual Editor
-              </Button>
-              <Button variant={activeView === "json" ? "default" : "outline"} onClick={(event) => setActiveView("json")}>
-                View JSON
-              </Button>
+              <Group gap="xs">
+                <Button
+                  variant={activeView === "manager" ? "filled" : "subtle"}
+                  onClick={() => setActiveView("manager")}
+                  leftSection={<IconServer size={16} />}
+                  radius="md"
+                  size="sm"
+                >
+                  Visual Editor
+                </Button>
+                <Button
+                  variant={activeView === "json" ? "filled" : "subtle"}
+                  onClick={() => setActiveView("json")}
+                  leftSection={<IconCode size={16} />}
+                  radius="md"
+                  size="sm"
+                >
+                  View JSON
+                </Button>
+              </Group>
             </Group>
-          </Group>
+          </Flex>
         </Container>
       </AppShell.Header>
 
       <AppShell.Main>
-        <Container size="xl">
-          {activeView === "manager" ? (
-            <ServerManager />
-          ) : (
-            <Container size="lg" py="lg">
-              <Stack>
-                <Group justify="space-between" align="center">
-                  <Title order={2} size="3">
-                    Configuration JSON File
-                  </Title>
-                  <Button onClick={(event) => loadJsonData()} disabled={isLoading}>
-                    {isLoading ? "Loading..." : "Reload"}
-                  </Button>
-                </Group>
+        <Container size="xl" py="md">
+          <Transition
+            mounted={activeView === "manager"}
+            transition="fade"
+            duration={200}
+          >
+            {(styles) => (
+              <div style={{ ...styles, display: activeView === "manager" ? 'block' : 'none' }}>
+                <ServerManager />
+              </div>
+            )}
+          </Transition>
 
-                <Text size="sm" c="dimmed">
-                  <Code>{configPath}</Code>
-                </Text>
+          <Transition
+            mounted={activeView === "json"}
+            transition="fade"
+            duration={200}
+          >
+            {(styles) => (
+              <div style={{ ...styles, display: activeView === "json" ? 'block' : 'none' }}>
+                <Container size="lg" py="lg">
+                  <Stack>
+                    <Group justify="space-between" align="center">
+                      <Title order={2} size="h4">
+                        Configuration JSON File
+                      </Title>
+                      <Button
+                        onClick={loadJsonData}
+                        disabled={isLoading}
+                        variant="light"
+                        radius="md"
+                        size="sm"
+                      >
+                        {isLoading ? "Loading..." : "Reload"}
+                      </Button>
+                    </Group>
 
-                {jsonError && (
-                  <Paper p="md" withBorder radius="md" bg="red.0" c="red">
-                    {jsonError}
-                  </Paper>
-                )}
+                    <Text size="sm" c="dimmed">
+                      <Code>{configPath}</Code>
+                    </Text>
 
-                {isLoading ? (
-                  <Box ta="center" py="xl">
-                    <Loader />
-                    <Text mt="md">Loading data...</Text>
-                  </Box>
-                ) : jsonData ? (
-                  <Paper
-                    p="md"
-                    withBorder
-                    radius="md"
-                    bg="gray.0"
-                    style={{
-                      maxHeight: "70vh",
-                      overflow: "auto",
-                      whiteSpace: "pre",
-                      fontFamily: "monospace",
-                      fontSize: "14px",
-                    }}
-                  >
-                    {jsonData}
-                  </Paper>
-                ) : (
-                  <Paper p="xl" withBorder radius="md" bg="gray.0" ta="center">
-                    <Text>No data available</Text>
-                  </Paper>
-                )}
-              </Stack>
-            </Container>
-          )}
+                    {jsonError && (
+                      <Paper p="md" withBorder radius="md" bg="red.0" c="red">
+                        {jsonError}
+                      </Paper>
+                    )}
+
+                    {isLoading ? (
+                      <Box ta="center" py="xl">
+                        <Loader />
+                        <Text mt="md">Loading data...</Text>
+                      </Box>
+                    ) : jsonData ? (
+                      <Paper
+                        p="md"
+                        withBorder
+                        radius="md"
+                        shadow="sm"
+                        style={{
+                          maxHeight: "70vh",
+                          overflow: "auto",
+                          whiteSpace: "pre",
+                          fontFamily: "monospace",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {jsonData}
+                      </Paper>
+                    ) : (
+                      <Paper p="xl" withBorder radius="md" ta="center" shadow="sm">
+                        <Text>No data available</Text>
+                      </Paper>
+                    )}
+                  </Stack>
+                </Container>
+              </div>
+            )}
+          </Transition>
         </Container>
       </AppShell.Main>
 
-      <AppShell.Footer p="md">
+      <AppShell.Footer
+        p="md"
+        h={50}
+        style={{
+          borderTop: '1px solid',
+          borderColor: colorScheme === 'dark' ? '#2C2E33' : '#e9ecef',
+        }}
+      >
         <Container size="xl">
           <Text ta="center" size="sm" c="dimmed">
             MCP Manager - Manage your Model Context Protocol servers
