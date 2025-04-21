@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
-import { AppShell, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack, Button } from "@mantine/core"
+import { AppShell, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack, Button, SegmentedControl, useMantineColorScheme } from "@mantine/core"
 import ServerManager from "./components/mcp/ServerManager"
+import {MantineColorScheme} from "@mantine/core/lib/core/MantineProvider/theme.types";
 
 // Declare a type for the window with electron property
 declare global {
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [jsonError, setJsonError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [configPath, setConfigPath] = useState<string>("")
+  const { setColorScheme, colorScheme } = useMantineColorScheme()
 
   // Determine the configuration path based on the operating system
   const determineConfigPath = async () => {
@@ -87,6 +89,15 @@ const App: React.FC = () => {
               MCP Manager
             </Title>
             <Group>
+              <SegmentedControl
+                value={colorScheme}
+                onChange={(value: string) => setColorScheme(value as MantineColorScheme)}
+                data={[
+                  { value: 'light', label: 'Light' },
+                  { value: 'auto', label: 'System' },
+                  { value: 'dark', label: 'Dark' },
+                ]}
+              />
               <Button
                 variant={activeView === "manager" ? "default" : "outline"}
                 onClick={(event) => setActiveView("manager")}
@@ -109,7 +120,7 @@ const App: React.FC = () => {
             <Container size="lg" py="lg">
               <Stack>
                 <Group justify="space-between" align="center">
-                  <Title order={2} size="h3">
+                  <Title order={2} size="3">
                     Configuration JSON File
                   </Title>
                   <Button onClick={(event) => loadJsonData()} disabled={isLoading}>
