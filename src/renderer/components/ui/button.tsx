@@ -1,9 +1,9 @@
 import * as React from "react"
 import { Button as MantineButton, ButtonProps as MantineButtonProps } from "@mantine/core"
 
-export interface ButtonProps extends Omit<MantineButtonProps, 'variant'> {
-  asChild?: boolean;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+export interface ButtonProps extends Omit<MantineButtonProps, "variant"> {
+  asChild?: boolean
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
 }
 
 // Mapping from our custom variants to Mantine variants
@@ -14,7 +14,7 @@ const variantMapping = {
   secondary: "light",
   ghost: "subtle",
   link: "transparent",
-};
+}
 
 // Mapping from our custom colors to Mantine colors
 const colorMapping = {
@@ -24,15 +24,15 @@ const colorMapping = {
   secondary: "gray",
   ghost: "gray",
   link: "blue",
-};
+}
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "md", asChild = false, color, ...props }, ref) => {
     // Map our custom variants to Mantine variants
-    const mantineVariant = variantMapping[variant as keyof typeof variantMapping] || "filled";
-    
+    const mantineVariant = variantMapping[variant as keyof typeof variantMapping] || "filled"
+
     // Set color based on variant if not explicitly provided
-    const mantineColor = color || colorMapping[variant as keyof typeof colorMapping];
+    const mantineColor = color || colorMapping[variant as keyof typeof colorMapping]
 
     return (
       <MantineButton
@@ -44,7 +44,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       />
     )
-  }
+  },
 )
 Button.displayName = "Button"
 

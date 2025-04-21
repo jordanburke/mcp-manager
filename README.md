@@ -4,7 +4,6 @@ MCP Manager is an Electron-based desktop application for managing Model Context 
 
 ![MCP Manager Screenshot](./docs/img/img-0.png)
 
-
 ## Features
 
 ![MCP Manager Screenshot](./docs/img/demo.gif)
@@ -29,17 +28,20 @@ You can download the latest pre-built application for your platform:
 If you prefer to build the application yourself:
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/iagolast/mcp-manager.git
    cd mcp-manager
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Build the application:
+
    ```bash
    npm run build
    ```
@@ -56,6 +58,7 @@ The built application will be available in the `release` directory.
 ### Running in Development Mode
 
 1. Clone the repository and install dependencies:
+
    ```bash
    git clone https://github.com/iagolast/mcp-manager.git
    cd mcp-manager
@@ -80,11 +83,13 @@ This will launch both the Vite development server for the React frontend and the
 ### Testing
 
 Run the tests with:
+
 ```bash
 npm test
 ```
 
 For development with continuous testing:
+
 ```bash
 npm run test:watch
 ```
@@ -92,6 +97,7 @@ npm run test:watch
 ## Configuration
 
 MCP Manager stores its configuration in:
+
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
@@ -114,4 +120,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Electron](https://www.electronjs.org/)
 - Frontend developed with [React](https://reactjs.org/) and [TypeScript](https://www.typescriptlang.org/)
-- UI styled with CSS-in-JS techniques 
+- UI styled with CSS-in-JS techniques

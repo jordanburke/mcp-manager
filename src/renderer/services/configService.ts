@@ -1,4 +1,4 @@
-import { MCPConfig, MCPServer } from '../types/mcp';
+import { MCPConfig, MCPServer } from "../types/mcp"
 
 /**
  * Clase para validar y procesar la configuración de MCP
@@ -9,10 +9,10 @@ export class ConfigService {
    */
   static parseConfig(jsonString: string): MCPConfig {
     try {
-      const parsed = JSON.parse(jsonString);
-      return this.validateAndNormalizeConfig(parsed);
+      const parsed = JSON.parse(jsonString)
+      return this.validateAndNormalizeConfig(parsed)
     } catch (error) {
-      return this.createDefaultConfig();
+      return this.createDefaultConfig()
     }
   }
 
@@ -22,22 +22,22 @@ export class ConfigService {
    */
   static validateAndNormalizeConfig(config: any): MCPConfig {
     const normalizedConfig: MCPConfig = {
-      mcpServers: {}
-    };
+      mcpServers: {},
+    }
 
     // Verifica que mcpServers sea un objeto
-    if (typeof config.mcpServers === 'object' && config.mcpServers !== null) {
+    if (typeof config.mcpServers === "object" && config.mcpServers !== null) {
       // Procesa cada servidor en mcpServers
       Object.entries(config.mcpServers).forEach(([id, serverData]) => {
         if (this.isValidServer(serverData)) {
-          normalizedConfig.mcpServers[id] = this.normalizeServer(serverData as any);
+          normalizedConfig.mcpServers[id] = this.normalizeServer(serverData as any)
         } else {
-          console.warn(`Server ${id} has invalid structure, skipping`);
+          console.warn(`Server ${id} has invalid structure, skipping`)
         }
-      });
+      })
     }
 
-    return normalizedConfig;
+    return normalizedConfig
   }
 
   /**
@@ -45,39 +45,39 @@ export class ConfigService {
    */
   static migrateFromOldFormat(oldConfig: any): MCPConfig {
     const newConfig: MCPConfig = {
-      mcpServers: {}
-    };
-    
+      mcpServers: {},
+    }
+
     // Migrar servidores del formato array al formato objeto
     if (oldConfig.servers && Array.isArray(oldConfig.servers)) {
       oldConfig.servers.forEach((server: any) => {
-        if (server && server.id && typeof server.id === 'string') {
-          newConfig.mcpServers[server.id] = this.normalizeServer(server);
+        if (server && server.id && typeof server.id === "string") {
+          newConfig.mcpServers[server.id] = this.normalizeServer(server)
         }
-      });
+      })
     }
-    
+
     // También incorporar cualquier servidor que ya esté en mcpServers
-    if (oldConfig.mcpServers && typeof oldConfig.mcpServers === 'object') {
+    if (oldConfig.mcpServers && typeof oldConfig.mcpServers === "object") {
       Object.entries(oldConfig.mcpServers).forEach(([id, serverData]) => {
         if (this.isValidServer(serverData)) {
-          newConfig.mcpServers[id] = this.normalizeServer(serverData as any);
+          newConfig.mcpServers[id] = this.normalizeServer(serverData as any)
         }
-      });
+      })
     }
-    
-    return newConfig;
+
+    return newConfig
   }
 
   /**
    * Verifica si un servidor tiene los campos requeridos
    */
   static isValidServer(server: any): boolean {
-    if (!server || typeof server !== 'object') {
-      return false;
+    if (!server || typeof server !== "object") {
+      return false
     }
-    
-    return typeof server.command === 'string';
+
+    return typeof server.command === "string"
   }
 
   /**
@@ -87,8 +87,8 @@ export class ConfigService {
     return {
       command: server.command,
       args: Array.isArray(server.args) ? server.args : [],
-      env: server.env && typeof server.env === 'object' ? server.env : {}
-    };
+      env: server.env && typeof server.env === "object" ? server.env : {},
+    }
   }
 
   /**
@@ -96,15 +96,15 @@ export class ConfigService {
    */
   static createDefaultConfig(): MCPConfig {
     return {
-      mcpServers: {}
-    };
+      mcpServers: {},
+    }
   }
 
   /**
    * Comprueba si un servidor existe en la configuración
    */
   static serverExists(config: MCPConfig, serverId: string): boolean {
-    return !!(config.mcpServers && config.mcpServers[serverId]);
+    return !!(config.mcpServers && config.mcpServers[serverId])
   }
 
   /**
@@ -112,9 +112,9 @@ export class ConfigService {
    */
   static findServerById(config: MCPConfig, serverId: string): MCPServer | null {
     if (this.serverExists(config, serverId)) {
-      return config.mcpServers[serverId];
+      return config.mcpServers[serverId]
     }
-    return null;
+    return null
   }
 
   /**
@@ -124,10 +124,10 @@ export class ConfigService {
   static stringifyConfig(config: MCPConfig): string {
     // Crear un objeto que solo contenga mcpServers para asegurarnos de no incluir otros campos
     const cleanConfig = {
-      mcpServers: { ...config.mcpServers }
-    };
-    
-    return JSON.stringify(cleanConfig, null, 2);
+      mcpServers: { ...config.mcpServers },
+    }
+
+    return JSON.stringify(cleanConfig, null, 2)
   }
 
   /**
@@ -138,7 +138,7 @@ export class ConfigService {
   static getServersArray(config: MCPConfig): Array<{ id: string; server: MCPServer }> {
     return Object.entries(config.mcpServers).map(([id, server]) => ({
       id,
-      server
-    }));
+      server,
+    }))
   }
-} 
+}

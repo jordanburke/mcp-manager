@@ -1,104 +1,100 @@
-import React, { useState, useEffect } from 'react';
-import { AppShell, Header, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack } from '@mantine/core';
-import { Button } from './components/ui/button';
-import ServerManager from './components/mcp/ServerManager';
+import React, { useState, useEffect } from "react"
+import { AppShell, Header, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack } from "@mantine/core"
+import { Button } from "./components/ui/button"
+import ServerManager from "./components/mcp/ServerManager"
 
 // Declare a type for the window with electron property
 declare global {
   interface Window {
     electron: {
       ipcRenderer: {
-        invoke(channel: string, ...args: any[]): Promise<any>;
+        invoke(channel: string, ...args: any[]): Promise<any>
       }
     }
   }
 }
 
 const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<'json' | 'manager'>('manager');
-  const [jsonData, setJsonData] = useState<string | null>(null);
-  const [jsonError, setJsonError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [configPath, setConfigPath] = useState<string>('');
+  const [activeView, setActiveView] = useState<"json" | "manager">("manager")
+  const [jsonData, setJsonData] = useState<string | null>(null)
+  const [jsonError, setJsonError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [configPath, setConfigPath] = useState<string>("")
 
   // Determine the configuration path based on the operating system
   const determineConfigPath = async () => {
     try {
       // Get the platform from the main process
-      const platform = await window.electron.ipcRenderer.invoke('get-platform');
+      const platform = await window.electron.ipcRenderer.invoke("get-platform")
 
-      if (platform === 'darwin') {
+      if (platform === "darwin") {
         // macOS
-        setConfigPath('~/Library/Application Support/Claude/claude_desktop_config.json');
-      } else if (platform === 'win32') {
+        setConfigPath("~/Library/Application Support/Claude/claude_desktop_config.json")
+      } else if (platform === "win32") {
         // Windows
-        setConfigPath('%APPDATA%\\Claude\\claude_desktop_config.json');
+        setConfigPath("%APPDATA%\\Claude\\claude_desktop_config.json")
       } else {
         // Linux and other platforms
-        setConfigPath('~/.config/Claude/claude_desktop_config.json');
+        setConfigPath("~/.config/Claude/claude_desktop_config.json")
       }
     } catch (error) {
       // Fallback to macOS path if there's an error
-      setConfigPath('~/Library/Application Support/Claude/claude_desktop_config.json');
-      console.error('Error determining platform:', error);
+      setConfigPath("~/Library/Application Support/Claude/claude_desktop_config.json")
+      console.error("Error determining platform:", error)
     }
-  };
+  }
 
   // Call determineConfigPath when component mounts
   useEffect(() => {
-    determineConfigPath();
-  }, []);
+    determineConfigPath()
+  }, [])
 
   const loadJsonData = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const jsonData = await window.electron.ipcRenderer.invoke('get-mcp-config');
+      const jsonData = await window.electron.ipcRenderer.invoke("get-mcp-config")
 
       // Format the JSON for better readability
       try {
-        const formattedJson = JSON.stringify(JSON.parse(jsonData), null, 2);
-        setJsonData(formattedJson);
-        setJsonError(null);
+        const formattedJson = JSON.stringify(JSON.parse(jsonData), null, 2)
+        setJsonData(formattedJson)
+        setJsonError(null)
       } catch (error) {
         // If it's not a valid JSON, show the plain text
-        setJsonData(jsonData);
-        setJsonError('The file does not contain valid JSON');
+        setJsonData(jsonData)
+        setJsonError("The file does not contain valid JSON")
       }
     } catch (error: any) {
-      setJsonData(null);
-      setJsonError(`Error communicating with the main process: ${error?.message || 'Unknown'}`);
+      setJsonData(null)
+      setJsonError(`Error communicating with the main process: ${error?.message || "Unknown"}`)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   // Load JSON data when switching to JSON view
   React.useEffect(() => {
-    if (activeView === 'json') {
-      loadJsonData();
+    if (activeView === "json") {
+      loadJsonData()
     }
-  }, [activeView]);
+  }, [activeView])
 
   return (
-    <AppShell
-      header={{ height: 80 }}
-      padding="md"
-    >
+    <AppShell header={{ height: 80 }} padding="md">
       <AppShell.Header>
         <Container size="xl" py="md">
           <Group justify="space-between" align="center">
-            <Title order={1} size="h2">MCP Manager</Title>
+            <Title order={1} size="h2">
+              MCP Manager
+            </Title>
             <Group>
-              <Button 
-                variant={activeView === 'manager' ? 'default' : 'outline'} 
-                onClick={() => setActiveView('manager')}
+              <Button
+                variant={activeView === "manager" ? "default" : "outline"}
+                onClick={() => setActiveView("manager")}
               >
                 Visual Editor
               </Button>
-              <Button 
-                variant={activeView === 'json' ? 'default' : 'outline'} 
-                onClick={() => setActiveView('json')}
-              >
+              <Button variant={activeView === "json" ? "default" : "outline"} onClick={() => setActiveView("json")}>
                 View JSON
               </Button>
             </Group>
@@ -108,15 +104,17 @@ const App: React.FC = () => {
 
       <AppShell.Main>
         <Container size="xl">
-          {activeView === 'manager' ? (
+          {activeView === "manager" ? (
             <ServerManager />
           ) : (
             <Container size="lg" py="lg">
               <Stack>
                 <Group justify="space-between" align="center">
-                  <Title order={2} size="h3">Configuration JSON File</Title>
+                  <Title order={2} size="h3">
+                    Configuration JSON File
+                  </Title>
                   <Button onClick={loadJsonData} disabled={isLoading}>
-                    {isLoading ? 'Loading...' : 'Reload'}
+                    {isLoading ? "Loading..." : "Reload"}
                   </Button>
                 </Group>
 
@@ -141,12 +139,12 @@ const App: React.FC = () => {
                     withBorder
                     radius="md"
                     bg="gray.0"
-                    style={{ 
-                      maxHeight: '70vh', 
-                      overflow: 'auto',
-                      whiteSpace: 'pre',
-                      fontFamily: 'monospace',
-                      fontSize: '14px'
+                    style={{
+                      maxHeight: "70vh",
+                      overflow: "auto",
+                      whiteSpace: "pre",
+                      fontFamily: "monospace",
+                      fontSize: "14px",
                     }}
                   >
                     {jsonData}
@@ -170,7 +168,7 @@ const App: React.FC = () => {
         </Container>
       </AppShell.Footer>
     </AppShell>
-  );
-};
+  )
+}
 
-export default App;
+export default App
