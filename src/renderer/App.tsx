@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AppShell, Header, Container, Title, Group, Paper, Text, Code, Box, Loader, Stack } from '@mantine/core';
 import { Button } from './components/ui/button';
 import ServerManager from './components/mcp/ServerManager';
 
@@ -79,77 +80,97 @@ const App: React.FC = () => {
   }, [activeView]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="bg-card border-b pt-8">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center max-w-7xl">
-          <h1 className="text-2xl font-bold">MCP Manager</h1>
-          <div className="flex space-x-2">
-            <Button 
-              variant={activeView === 'manager' ? 'default' : 'outline'} 
-              onClick={() => setActiveView('manager')}
-            >
-              Visual Editor
-            </Button>
-            <Button 
-              variant={activeView === 'json' ? 'default' : 'outline'} 
-              onClick={() => setActiveView('json')}
-            >
-              View JSON
-            </Button>
-          </div>
-        </div>
-      </header>
+    <AppShell
+      header={{ height: 80 }}
+      padding="md"
+    >
+      <AppShell.Header>
+        <Container size="xl" py="md">
+          <Group justify="space-between" align="center">
+            <Title order={1} size="h2">MCP Manager</Title>
+            <Group>
+              <Button 
+                variant={activeView === 'manager' ? 'default' : 'outline'} 
+                onClick={() => setActiveView('manager')}
+              >
+                Visual Editor
+              </Button>
+              <Button 
+                variant={activeView === 'json' ? 'default' : 'outline'} 
+                onClick={() => setActiveView('json')}
+              >
+                View JSON
+              </Button>
+            </Group>
+          </Group>
+        </Container>
+      </AppShell.Header>
 
-      <main className="flex-grow bg-background">
-        <div className="mx-auto max-w-7xl w-full">
+      <AppShell.Main>
+        <Container size="xl">
           {activeView === 'manager' ? (
             <ServerManager />
           ) : (
-            <div className="container mx-auto p-8">
-              <div className="max-w-5xl mx-auto">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Configuration JSON File</h2>
-                  <div className="flex space-x-2">
-                    <Button onClick={loadJsonData} disabled={isLoading}>
-                      {isLoading ? 'Loading...' : 'Reload'}
-                    </Button>
-                  </div>
-                </div>
+            <Container size="lg" py="lg">
+              <Stack>
+                <Group justify="space-between" align="center">
+                  <Title order={2} size="h3">Configuration JSON File</Title>
+                  <Button onClick={loadJsonData} disabled={isLoading}>
+                    {isLoading ? 'Loading...' : 'Reload'}
+                  </Button>
+                </Group>
 
-                <p className="text-sm text-muted-foreground mb-4">
-                  <code className="bg-muted px-1 py-0.5 rounded">{configPath}</code>
-                </p>
+                <Text size="sm" c="dimmed">
+                  <Code>{configPath}</Code>
+                </Text>
 
                 {jsonError && (
-                  <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-md mb-4">
+                  <Paper p="md" withBorder radius="md" bg="red.0" c="red">
                     {jsonError}
-                  </div>
+                  </Paper>
                 )}
 
                 {isLoading ? (
-                  <div className="text-center p-12">Loading data...</div>
+                  <Box ta="center" py="xl">
+                    <Loader />
+                    <Text mt="md">Loading data...</Text>
+                  </Box>
                 ) : jsonData ? (
-                  <pre className="bg-muted p-4 rounded-md overflow-auto max-h-[70vh] w-full text-sm">
+                  <Paper
+                    p="md"
+                    withBorder
+                    radius="md"
+                    bg="gray.0"
+                    style={{ 
+                      maxHeight: '70vh', 
+                      overflow: 'auto',
+                      whiteSpace: 'pre',
+                      fontFamily: 'monospace',
+                      fontSize: '14px'
+                    }}
+                  >
                     {jsonData}
-                  </pre>
+                  </Paper>
                 ) : (
-                  <div className="text-center p-12 bg-muted rounded-md">
-                    No data available
-                  </div>
+                  <Paper p="xl" withBorder radius="md" bg="gray.0" ta="center">
+                    <Text>No data available</Text>
+                  </Paper>
                 )}
-              </div>
-            </div>
+              </Stack>
+            </Container>
           )}
-        </div>
-      </main>
+        </Container>
+      </AppShell.Main>
 
-      <footer className="bg-card border-t py-4">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground max-w-7xl">
-          MCP Manager - Manage your Model Context Protocol servers
-        </div>
-      </footer>
-    </div>
+      <AppShell.Footer p="md">
+        <Container size="xl">
+          <Text ta="center" size="sm" c="dimmed">
+            MCP Manager - Manage your Model Context Protocol servers
+          </Text>
+        </Container>
+      </AppShell.Footer>
+    </AppShell>
   );
 };
 
-export default App; 
+export default App;

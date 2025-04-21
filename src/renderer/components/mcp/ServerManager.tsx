@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Container, Title, Group, Paper, Text, Box, Loader, Button, Stack, Table } from '@mantine/core';
 import ServerCard from './ServerCard';
 import ServerDialog from './ServerDialog';
 import DeleteConfirmDialog from './DeleteConfirmDialog';
@@ -183,105 +184,85 @@ const ServerManager: React.FC = () => {
   
   if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Loading MCP Servers...</h2>
-        <div style={{ width: '24px', height: '24px', margin: '0 auto', border: '2px solid #ccc', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
+      <Box ta="center" py="xl">
+        <Title order={2} mb="md">Loading MCP Servers...</Title>
+        <Loader size="md" />
+      </Box>
     );
   }
   
   if (error) {
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h2 style={{ marginBottom: '0.5rem' }}>Error Loading Servers</h2>
-        <p style={{ marginBottom: '1rem', color: '#666' }}>{error}</p>
-        <button onClick={loadServers} style={{ padding: '0.5rem 1rem', border: '1px solid #ccc', borderRadius: '4px', background: 'none' }}>
+      <Box ta="center" py="xl">
+        <Title order={2} mb="xs">Error Loading Servers</Title>
+        <Text mb="md" c="dimmed">{error}</Text>
+        <Button variant="outline" onClick={loadServers}>
           Try Again
-        </button>
-      </div>
+        </Button>
+      </Box>
     );
   }
   
   return (
-    <div style={{ padding: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>MCP Servers</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
-            onClick={checkAllServerStatuses} 
-            style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'none', border: '1px solid #ccc' }}
-          >
+    <Box p="md">
+      <Group justify="space-between" align="center" mb="md">
+        <Title order={2} size="h3">MCP Servers</Title>
+        <Group>
+          <Button variant="outline" onClick={checkAllServerStatuses}>
             Check All Statuses
-          </button>
-          <button 
-            onClick={() => setIsImportDialogOpen(true)} 
-            style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'none', border: '1px solid #ccc' }}
-          >
+          </Button>
+          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
             Paste from JSON
-          </button>
-          <button 
-            onClick={() => setIsAddDialogOpen(true)} 
-            style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: '#f1f1f1', border: '1px solid #ccc' }}
-          >
+          </Button>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
             + Add Server
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Group>
+      </Group>
       
       {serverIds.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '2rem', border: '1px solid #ccc', borderRadius: '4px' }}>
-          <h3 style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>No MCP Servers Configured</h3>
-          <p style={{ marginBottom: '1rem', color: '#666' }}>
+        <Paper p="xl" withBorder ta="center">
+          <Title order={3} mb="xs">No MCP Servers Configured</Title>
+          <Text mb="md" c="dimmed">
             MCP servers are used to manage your cluster configuration.
-          </p>
-          <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-            <button 
-              onClick={() => setIsImportDialogOpen(true)}
-              style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: 'none', border: '1px solid #ccc' }}
-            >
+          </Text>
+          <Group justify="center">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
               Paste from JSON
-            </button>
-            <button 
-              onClick={() => setIsAddDialogOpen(true)}
-              style={{ padding: '0.5rem 1rem', borderRadius: '4px', background: '#f1f1f1', border: '1px solid #ccc' }}
-            >
+            </Button>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
               + Add Your First Server
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Group>
+        </Paper>
       ) : (
-        <div style={{ border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
-          {/* Table Header */}
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            padding: '0.75rem 1rem',
-            borderBottom: '1px solid #eee',
-            background: '#f9f9f9',
-            fontWeight: 'bold',
-            fontSize: '0.875rem'
-          }}>
-            <div style={{ width: '80px', marginRight: '0.75rem' }}>Status</div>
-            <div style={{ width: '15%', paddingRight: '1rem' }}>Server ID</div>
-            <div style={{ width: '30%', paddingRight: '1rem' }}>Command</div>
-            <div style={{ width: '15%', paddingRight: '1rem' }}>Arguments</div>
-            <div style={{ width: '15%', paddingRight: '1rem' }}>Env Variables</div>
-            <div style={{ width: '15%', textAlign: 'right' }}>Actions</div>
-          </div>
-          
-          {/* Server Rows */}
-          {serverIds.map(serverId => (
-            <ServerCard
-              key={serverId}
-              server={servers[serverId]}
-              serverId={serverId}
-              status={serverStatuses[serverId] || ServerStatus.UNKNOWN}
-              onEdit={() => openEditDialog(serverId)}
-              onDelete={() => openDeleteDialog(serverId)}
-              onCheckStatus={() => checkServerStatus(serverId)}
-            />
-          ))}
-        </div>
+        <Paper withBorder>
+          <Table striped highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th w={80}>Status</Table.Th>
+                <Table.Th w="15%">Server ID</Table.Th>
+                <Table.Th w="30%">Command</Table.Th>
+                <Table.Th w="15%">Arguments</Table.Th>
+                <Table.Th w="15%">Env Variables</Table.Th>
+                <Table.Th w="15%" ta="right">Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {serverIds.map(serverId => (
+                <ServerCard
+                  key={serverId}
+                  server={servers[serverId]}
+                  serverId={serverId}
+                  status={serverStatuses[serverId] || ServerStatus.UNKNOWN}
+                  onEdit={() => openEditDialog(serverId)}
+                  onDelete={() => openDeleteDialog(serverId)}
+                  onCheckStatus={() => checkServerStatus(serverId)}
+                />
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Paper>
       )}
       
       <ServerDialog
@@ -318,8 +299,8 @@ const ServerManager: React.FC = () => {
         onClose={() => setIsImportDialogOpen(false)}
         onImport={handleImportFromJson}
       />
-    </div>
+    </Box>
   );
 };
 
-export default ServerManager; 
+export default ServerManager;

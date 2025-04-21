@@ -1,4 +1,5 @@
 import React from 'react';
+import { Table, Badge, Group, Button, Text, ActionIcon } from '@mantine/core';
 import { MCPServer, ServerStatus } from '../../types/mcp';
 
 interface ServerCardProps {
@@ -21,29 +22,17 @@ const ServerCard: React.FC<ServerCardProps> = ({
   // Get the number of environment variables
   const numEnvVars = Object.keys(server.env).length;
 
-  // Status badge styles
-  const getStatusBadgeStyle = () => {
+  // Status badge color mapping
+  const getStatusColor = () => {
     switch (status) {
       case ServerStatus.ONLINE:
-        return {
-          backgroundColor: '#10b981', // Green
-          color: 'white',
-        };
+        return 'green';
       case ServerStatus.OFFLINE:
-        return {
-          backgroundColor: '#ef4444', // Red
-          color: 'white',
-        };
+        return 'red';
       case ServerStatus.CHECKING:
-        return {
-          backgroundColor: '#f59e0b', // Amber
-          color: 'white',
-        };
+        return 'yellow';
       default:
-        return {
-          backgroundColor: '#6b7280', // Gray
-          color: 'white',
-        };
+        return 'gray';
     }
   };
 
@@ -62,122 +51,73 @@ const ServerCard: React.FC<ServerCardProps> = ({
   };
 
   return (
-    <div style={{ 
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0.75rem 1rem',
-      borderBottom: '1px solid #eee',
-      width: '100%'
-    }}>
+    <Table.Tr>
       {/* Status Badge */}
-      <div style={{ 
-        marginRight: '0.75rem',
-        display: 'flex',
-        alignItems: 'center',
-      }}>
-        <div
-          onClick={onCheckStatus}
-          style={{
-            ...getStatusBadgeStyle(),
-            fontSize: '0.75rem',
-            padding: '0.25rem 0.5rem',
-            borderRadius: '9999px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-          }}
+      <Table.Td>
+        <Badge 
+          color={getStatusColor()} 
+          onClick={onCheckStatus} 
+          style={{ cursor: 'pointer' }}
           title="Click to check status"
         >
           {getStatusText()}
-        </div>
-      </div>
+        </Badge>
+      </Table.Td>
       
       {/* ID Column */}
-      <div style={{ 
-        width: '15%', 
-        fontWeight: 'bold', 
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        paddingRight: '1rem'
-      }}>
-        {serverId}
-      </div>
+      <Table.Td>
+        <Text fw={700} truncate>
+          {serverId}
+        </Text>
+      </Table.Td>
       
       {/* Command Column */}
-      <div style={{ 
-        width: '30%', 
-        fontFamily: 'monospace',
-        fontSize: '0.875rem',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        paddingRight: '1rem'
-      }}>
-        {server.command}
-      </div>
+      <Table.Td>
+        <Text ff="monospace" size="sm" truncate>
+          {server.command}
+        </Text>
+      </Table.Td>
       
       {/* Args Column */}
-      <div style={{ 
-        width: '15%', 
-        fontSize: '0.875rem',
-        paddingRight: '1rem'
-      }}>
+      <Table.Td>
         {server.args.length > 0 ? (
-          <span>{server.args.length} arguments</span>
+          <Text size="sm">{server.args.length} arguments</Text>
         ) : (
-          <span style={{ color: '#666' }}>No arguments</span>
+          <Text size="sm" c="dimmed">No arguments</Text>
         )}
-      </div>
+      </Table.Td>
       
       {/* Env Vars Column */}
-      <div style={{ 
-        width: '15%', 
-        fontSize: '0.875rem',
-        paddingRight: '1rem'
-      }}>
+      <Table.Td>
         {numEnvVars > 0 ? (
-          <span>{numEnvVars} {numEnvVars === 1 ? 'variable' : 'variables'}</span>
+          <Text size="sm">{numEnvVars} {numEnvVars === 1 ? 'variable' : 'variables'}</Text>
         ) : (
-          <span style={{ color: '#666' }}>No env vars</span>
+          <Text size="sm" c="dimmed">No env vars</Text>
         )}
-      </div>
+      </Table.Td>
       
       {/* Actions Column */}
-      <div style={{ 
-        width: '15%',
-        display: 'flex', 
-        justifyContent: 'flex-end',
-        gap: '0.5rem'
-      }}>
-        <button 
-          style={{ 
-            background: 'none',
-            border: '1px solid #ccc',
-            padding: '0.25rem 0.5rem',
-            borderRadius: '3px',
-            cursor: 'pointer',
-            fontSize: '0.75rem'
-          }} 
-          onClick={onEdit}
-        >
-          Edit
-        </button>
-        <button 
-          style={{ 
-            background: 'none',
-            border: '1px solid #ccc',
-            padding: '0.25rem 0.5rem',
-            borderRadius: '3px',
-            cursor: 'pointer',
-            fontSize: '0.75rem'
-          }} 
-          onClick={onDelete}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
+      <Table.Td>
+        <Group justify="flex-end" gap="xs">
+          <Button 
+            variant="outline" 
+            size="xs" 
+            onClick={onEdit}
+          >
+            Edit
+          </Button>
+          <Button 
+            variant="outline" 
+            color="red" 
+            size="xs" 
+            onClick={onDelete}
+          >
+            Delete
+          </Button>
+        </Group>
+      </Table.Td>
+    </Table.Tr>
   );
 };
 
-export default ServerCard; 
+export default ServerCard;
