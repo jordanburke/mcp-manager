@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from './components/ui/button';
 import ServerManager from './components/mcp/ServerManager';
 
@@ -18,12 +18,41 @@ const App: React.FC = () => {
   const [jsonData, setJsonData] = useState<string | null>(null);
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [configPath, setConfigPath] = useState<string>('');
+
+  // Determine the configuration path based on the operating system
+  const determineConfigPath = async () => {
+    try {
+      // Get the platform from the main process
+      const platform = await window.electron.ipcRenderer.invoke('get-platform');
+
+      if (platform === 'darwin') {
+        // macOS
+        setConfigPath('~/Library/Application Support/Claude/claude_desktop_config.json');
+      } else if (platform === 'win32') {
+        // Windows
+        setConfigPath('%APPDATA%\\Claude\\claude_desktop_config.json');
+      } else {
+        // Linux and other platforms
+        setConfigPath('~/.config/Claude/claude_desktop_config.json');
+      }
+    } catch (error) {
+      // Fallback to macOS path if there's an error
+      setConfigPath('~/Library/Application Support/Claude/claude_desktop_config.json');
+      console.error('Error determining platform:', error);
+    }
+  };
+
+  // Call determineConfigPath when component mounts
+  useEffect(() => {
+    determineConfigPath();
+  }, []);
 
   const loadJsonData = async () => {
     setIsLoading(true);
     try {
       const jsonData = await window.electron.ipcRenderer.invoke('get-mcp-config');
-      
+
       // Format the JSON for better readability
       try {
         const formattedJson = JSON.stringify(JSON.parse(jsonData), null, 2);
@@ -86,9 +115,9 @@ const App: React.FC = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <p className="text-sm text-muted-foreground mb-4">
-                  <code className="bg-muted px-1 py-0.5 rounded">~/Library/Application Support/Claude/claude_desktop_config.json</code>
+                  <code className="bg-muted px-1 py-0.5 rounded">{configPath}</code>
                 </p>
 
                 {jsonError && (

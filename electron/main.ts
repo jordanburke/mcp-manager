@@ -10,13 +10,25 @@ let mainWindow: BrowserWindow | null = null;
 
 // Dirección del archivo de configuración Claude
 const getClaudeConfigPath = () => {
-  return path.join(
-    app.getPath('home'),
-    'Library',
-    'Application Support',
-    'Claude',
-    'claude_desktop_config.json'
-  );
+  const home = app.getPath('home');
+  const platform = process.platform;
+
+  if (platform === 'darwin') {
+    // macOS
+    return path.join(
+      home,
+      'Library',
+      'Application Support',
+      'Claude',
+      'claude_desktop_config.json'
+    );
+  } else if (platform === 'win32') {
+    // Windows
+    return path.join(home, "AppData/Roaming/Claude/claude_desktop_config.json");
+  } else {
+    // Linux and other platforms
+    return path.join(home, ".config/Claude/claude_desktop_config.json");
+  }
 };
 
 function createWindow() {
@@ -139,11 +151,16 @@ function createMenu() {
 // Este método se llamará cuando Electron haya terminado la inicialización y esté listo para crear ventanas del navegador.
 // Algunas APIs pueden usarse sólo después de que este evento ocurra.
 app.whenReady().then(() => {
+  // Expose platform information to the renderer process
+  ipcMain.handle('get-platform', () => {
+    return process.platform;
+  });
+
   // Leer la configuración MCP (ahora desde el archivo Claude)
   ipcMain.handle('get-mcp-config', async () => {
     try {
       const configPath = getClaudeConfigPath();
-      
+
       // Si el archivo no existe, crear uno con la configuración por defecto
       if (!fs.existsSync(configPath)) {
         const defaultConfig = {
@@ -152,7 +169,7 @@ app.whenReady().then(() => {
         await fs.promises.writeFile(configPath, JSON.stringify(defaultConfig, null, 2));
         return JSON.stringify(defaultConfig);
       }
-      
+
       // Leer el archivo existente
       const data = await fs.promises.readFile(configPath, 'utf8');
       return data;
@@ -178,12 +195,12 @@ app.whenReady().then(() => {
   ipcMain.handle('get-claude-config', async () => {
     try {
       const claudeConfigPath = getClaudeConfigPath();
-      
+
       // Check if file exists
       if (!fs.existsSync(claudeConfigPath)) {
         throw new Error('Claude desktop configuration file not found');
       }
-      
+
       // Read the file
       const data = await fs.promises.readFile(claudeConfigPath, 'utf8');
       return data;
@@ -226,7 +243,7 @@ async function checkCommandAvailability(command: string): Promise<boolean> {
   return new Promise((resolve) => {
     const platform = process.platform;
     const cmd = platform === 'win32' ? 'where' : 'which';
-    
+
     exec(`${cmd} ${command}`, (error) => {
       if (error) {
         resolve(false);
@@ -246,12 +263,12 @@ async function checkMCPServerConnection(server: any): Promise<boolean> {
     try {
       // Extract port from environment variables or command line arguments
       let port = 0;
-      
+
       // Try to find port in environment variables
       if (server.env && server.env.MCP_PORT) {
         port = parseInt(server.env.MCP_PORT, 10);
       }
-      
+
       // Otherwise try to find port in command line arguments (simple check)
       if (!port && Array.isArray(server.args)) {
         for (let i = 0; i < server.args.length; i++) {
@@ -266,32 +283,32 @@ async function checkMCPServerConnection(server: any): Promise<boolean> {
           }
         }
       }
-      
+
       // If we couldn't determine a port, assume port 8080 as fallback
       if (!port || isNaN(port)) {
         port = 8080;
       }
-      
+
       // Try to connect to the port
       const socket = new net.Socket();
-      
+
       socket.setTimeout(1000); // 1 second timeout
-      
+
       socket.on('connect', () => {
         socket.destroy();
         resolve(true);
       });
-      
+
       socket.on('timeout', () => {
         socket.destroy();
         resolve(false);
       });
-      
+
       socket.on('error', () => {
         socket.destroy();
         resolve(false);
       });
-      
+
       socket.connect(port, 'localhost');
     } catch (error) {
       console.error('Error checking server connection:', error);
