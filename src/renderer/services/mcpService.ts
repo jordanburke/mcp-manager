@@ -2,47 +2,47 @@ import { MCPConfig, MCPServer, EditableMCPServer, ServerStatus } from '../types/
 import { ConfigService } from './configService';
 
 /**
- * Obtiene la configuración de MCP del almacenamiento
- * @returns Promise con la configuración
+ * Gets the MCP configuration from storage
+ * @returns Promise with the configuration
  */
 export async function getMCPConfig(): Promise<MCPConfig> {
   try {
     const jsonData = await window.electron.ipcRenderer.invoke('get-mcp-config');
     return ConfigService.parseConfig(jsonData);
   } catch (error) {
-    console.error('Error al obtener configuración de MCP:', error);
-    throw new Error('No se pudo obtener la configuración de MCP');
+    console.error('Error getting MCP configuration:', error);
+    throw new Error('Could not get MCP configuration');
   }
 }
 
 /**
- * Guarda la configuración de MCP en el almacenamiento
- * @param config Configuración a guardar
- * @returns Promise con la configuración guardada
+ * Saves the MCP configuration to storage
+ * @param config Configuration to save
+ * @returns Promise with the saved configuration
  */
 export async function saveMCPConfig(config: MCPConfig): Promise<MCPConfig> {
   try {
-    // Validar y normalizar la configuración
+    // Validate and normalize the configuration
     const validatedConfig = ConfigService.validateAndNormalizeConfig(config);
-    
-    // Convertir a JSON sin campos no estándar
+
+    // Convert to JSON without non-standard fields
     const jsonData = ConfigService.stringifyConfig(validatedConfig);
-    
-    // Guardar en el sistema
+
+    // Save to the system
     await window.electron.ipcRenderer.invoke('save-mcp-config', jsonData);
-    
+
     return validatedConfig;
   } catch (error) {
-    console.error('Error al guardar configuración de MCP:', error);
-    throw new Error('No se pudo guardar la configuración de MCP');
+    console.error('Error saving MCP configuration:', error);
+    throw new Error('Could not save MCP configuration');
   }
 }
 
 /**
- * Añade un nuevo servidor MCP a la configuración
- * @param server Datos del servidor a añadir
- * @param serverId ID opcional para el servidor
- * @returns Promise con la configuración actualizada
+ * Adds a new MCP server to the configuration
+ * @param server Server data to add
+ * @param serverId Optional ID for the server
+ * @returns Promise with the updated configuration
  */
 export async function addMCPServer(server: MCPServer, serverId: string): Promise<MCPConfig> {
   try {
@@ -50,21 +50,21 @@ export async function addMCPServer(server: MCPServer, serverId: string): Promise
     if (!ConfigService.isValidServer(server)) {
       throw new Error('El servidor no tiene el formato correcto');
     }
-    
+
     // Normalizar el servidor
     const normalizedServer = ConfigService.normalizeServer(server);
-    
+
     // Obtener la configuración actual
     const config = await getMCPConfig();
-    
+
     // Verificar que el ID no exista ya
     if (ConfigService.serverExists(config, serverId)) {
       throw new Error(`Ya existe un servidor con el ID ${serverId}`);
     }
-    
+
     // Añadir el servidor a la configuración
     config.mcpServers[serverId] = normalizedServer;
-    
+
     // Guardar la configuración actualizada
     return await saveMCPConfig(config);
   } catch (error) {
@@ -85,21 +85,21 @@ export async function updateMCPServer(serverId: string, updatedServer: MCPServer
     if (!ConfigService.isValidServer(updatedServer)) {
       throw new Error('El servidor actualizado no tiene el formato correcto');
     }
-    
+
     // Normalizar el servidor
     const normalizedServer = ConfigService.normalizeServer(updatedServer);
-    
+
     // Obtener la configuración actual
     const config = await getMCPConfig();
-    
+
     // Verificar que el servidor existe
     if (!ConfigService.serverExists(config, serverId)) {
       throw new Error(`No existe un servidor con el ID ${serverId}`);
     }
-    
+
     // Actualizar el servidor
     config.mcpServers[serverId] = normalizedServer;
-    
+
     // Guardar la configuración actualizada
     return await saveMCPConfig(config);
   } catch (error) {
@@ -117,15 +117,15 @@ export async function deleteMCPServer(serverId: string): Promise<MCPConfig> {
   try {
     // Obtener la configuración actual
     const config = await getMCPConfig();
-    
+
     // Verificar que el servidor existe
     if (!ConfigService.serverExists(config, serverId)) {
       throw new Error(`No existe un servidor con el ID ${serverId}`);
     }
-    
+
     // Eliminar el servidor de la configuración
     delete config.mcpServers[serverId];
-    
+
     // Guardar la configuración actualizada
     return await saveMCPConfig(config);
   } catch (error) {
@@ -154,7 +154,7 @@ export async function setDefaultServer(serverId: string): Promise<{ success: boo
 export async function pingMCPServer(serverId: string, server: MCPServer): Promise<ServerStatus> {
   try {
     const response = await window.electron.ipcRenderer.invoke('ping-mcp-server', serverId, server);
-    
+
     if (response.success) {
       return ServerStatus.ONLINE;
     } else {
@@ -174,12 +174,12 @@ export async function pingAllMCPServers(): Promise<Record<string, ServerStatus>>
   try {
     const config = await getMCPConfig();
     const results: Record<string, ServerStatus> = {};
-    
+
     // Ping each server in parallel
     const pingPromises = Object.entries(config.mcpServers).map(async ([serverId, server]) => {
       results[serverId] = await pingMCPServer(serverId, server);
     });
-    
+
     await Promise.all(pingPromises);
     return results;
   } catch (error) {
@@ -200,34 +200,34 @@ export async function updateMCPServerWithId(originalServerId: string, updatedSer
     if (!ConfigService.isValidServer(updatedServer)) {
       throw new Error('Server has invalid format');
     }
-    
+
     // Normalize the server data
     const normalizedServer = ConfigService.normalizeServer(updatedServer);
-    
+
     // Get current configuration
     const config = await getMCPConfig();
-    
+
     // Verify the original server exists
     if (!ConfigService.serverExists(config, originalServerId)) {
       throw new Error(`Server with ID ${originalServerId} does not exist`);
     }
-    
+
     // Check if the ID has changed
     if (originalServerId !== updatedServer.id) {
       console.log(`Updating server ID from "${originalServerId}" to "${updatedServer.id}"`);
-      
+
       // Remove the server with the old ID
       delete config.mcpServers[originalServerId];
-      
+
       // Add the server with the new ID
       config.mcpServers[updatedServer.id] = normalizedServer;
     } else {
       console.log(`Updating server with unchanged ID: "${originalServerId}"`);
-      
+
       // Update the server with the same ID
       config.mcpServers[originalServerId] = normalizedServer;
     }
-    
+
     // Save the updated configuration
     return await saveMCPConfig(config);
   } catch (error) {

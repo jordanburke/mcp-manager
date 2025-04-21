@@ -5,10 +5,10 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 
-// Mantener una referencia global del objeto window para evitar que la ventana se cierre automáticamente cuando el objeto JavaScript sea recogido por el recolector de basura.
+// Keep a global reference of the window object to prevent the window from being automatically closed when the JavaScript object is garbage collected.
 let mainWindow: BrowserWindow | null = null;
 
-// Dirección del archivo de configuración Claude
+// Path to the Claude configuration file
 const getClaudeConfigPath = () => {
   const home = app.getPath('home');
   const platform = process.platform;
@@ -32,7 +32,7 @@ const getClaudeConfigPath = () => {
 };
 
 function createWindow() {
-  // Crear la ventana del navegador.
+  // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -53,37 +53,37 @@ function createWindow() {
     frame: true,
   });
 
-  // Mostrar la ventana solo cuando está lista para evitar parpadeos
+  // Show the window only when it's ready to avoid flickering
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
 
-  // Cargar la URL de la aplicación.
+  // Load the application URL.
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
-    // Abrir las DevTools en desarrollo.
+    // Open DevTools in development.
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 
-  // Abrir enlaces externos en el navegador predeterminado
+  // Open external links in the default browser
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Crear el menú de la aplicación
+  // Create the application menu
   createMenu();
 
-  // Emitido cuando la ventana es cerrada.
+  // Emitted when the window is closed.
   mainWindow.on('closed', () => {
-    // Eliminar la referencia del objeto window
+    // Remove the reference to the window object
     mainWindow = null;
   });
 }
 
-// Crear el menú de la aplicación
+// Create the application menu
 function createMenu() {
   const template = [
     {
@@ -148,20 +148,20 @@ function createMenu() {
   Menu.setApplicationMenu(menu);
 }
 
-// Este método se llamará cuando Electron haya terminado la inicialización y esté listo para crear ventanas del navegador.
-// Algunas APIs pueden usarse sólo después de que este evento ocurra.
+// This method will be called when Electron has finished initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Expose platform information to the renderer process
   ipcMain.handle('get-platform', () => {
     return process.platform;
   });
 
-  // Leer la configuración MCP (ahora desde el archivo Claude)
+  // Read the MCP configuration (now from the Claude file)
   ipcMain.handle('get-mcp-config', async () => {
     try {
       const configPath = getClaudeConfigPath();
 
-      // Si el archivo no existe, crear uno con la configuración por defecto
+      // If the file doesn't exist, create one with the default configuration
       if (!fs.existsSync(configPath)) {
         const defaultConfig = {
           mcpServers: {}
@@ -170,7 +170,7 @@ app.whenReady().then(() => {
         return JSON.stringify(defaultConfig);
       }
 
-      // Leer el archivo existente
+      // Read the existing file
       const data = await fs.promises.readFile(configPath, 'utf8');
       return data;
     } catch (error) {
@@ -179,7 +179,7 @@ app.whenReady().then(() => {
     }
   });
 
-  // Guardar la configuración MCP (ahora en el archivo Claude)
+  // Save the MCP configuration (now in the Claude file)
   ipcMain.handle('save-mcp-config', async (event, jsonData) => {
     try {
       const configPath = getClaudeConfigPath();
@@ -229,11 +229,11 @@ app.whenReady().then(() => {
     }
   });
 
-  // Crear la ventana principal
+  // Create the main window
   createWindow();
   app.on('activate', function () {
-    // En macOS es común volver a crear una ventana en la aplicación cuando el
-    // icono del dock es clicado y no hay otras ventanas abiertas.
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
 });
@@ -317,7 +317,7 @@ async function checkMCPServerConnection(server: any): Promise<boolean> {
   });
 }
 
-// Salir cuando todas las ventanas estén cerradas, excepto en macOS. Allí, es común para las aplicaciones y sus barras de menú permanecer activas hasta que el usuario sale explícitamente con Cmd + Q.
+// Quit when all windows are closed, except on macOS. There, it's common for applications and their menu bar to stay active until the user quits explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
