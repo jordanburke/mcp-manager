@@ -15,11 +15,11 @@ import {
   useMantineColorScheme,
   rem,
   Transition,
-  Flex
+  Flex,
+  MantineColorScheme,
 } from "@mantine/core"
 import ServerManager from "./components/mcp/ServerManager"
-import {MantineColorScheme} from "@mantine/core/lib/core/MantineProvider/theme.types";
-import { IconServer, IconCode } from '@tabler/icons-react';
+import { IconServer, IconCode } from "@tabler/icons-react"
 
 // Declare a type for the window with electron property
 declare global {
@@ -94,7 +94,7 @@ const App: React.FC = () => {
   // Load JSON data when switching to JSON view
   React.useEffect(() => {
     if (activeView === "json") {
-      loadJsonData()
+      loadJsonData().then()
     }
   }, [activeView])
 
@@ -104,22 +104,28 @@ const App: React.FC = () => {
       padding="md"
       styles={(theme) => ({
         main: {
-          backgroundColor: theme.colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+          backgroundColor: colorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
+          minHeight: "calc(100vh - 120px)", // Adjust to prevent scrollbar (header + footer height)
+          overflow: "hidden",
+        },
+        root: {
+          backgroundColor: colorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[0],
         },
       })}
     >
       <AppShell.Header
         style={{
-          background: colorScheme === 'dark'
-            ? 'linear-gradient(to right, #1A1B1E, #25262b)'
-            : 'linear-gradient(to right, #f8f9fa, #e9ecef)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          background:
+            colorScheme === "dark"
+              ? "linear-gradient(to right, #1A1B1E, #25262b)"
+              : "linear-gradient(to right, #f8f9fa, #e9ecef)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
         }}
       >
         <Container size="xl" h="100%">
           <Flex justify="space-between" align="center" h="100%">
             <Group>
-              <Title order={1} size="h3" style={{ letterSpacing: '-0.5px' }}>
+              <Title order={1} size="h3" style={{ letterSpacing: "-0.5px" }}>
                 MCP Manager
               </Title>
             </Group>
@@ -129,9 +135,9 @@ const App: React.FC = () => {
                 value={colorScheme}
                 onChange={(value: string) => setColorScheme(value as MantineColorScheme)}
                 data={[
-                  { value: 'light', label: 'Light' },
-                  { value: 'auto', label: 'System' },
-                  { value: 'dark', label: 'Dark' },
+                  { value: "light", label: "Light" },
+                  { value: "auto", label: "System" },
+                  { value: "dark", label: "Dark" },
                 ]}
                 size="xs"
                 radius="md"
@@ -163,38 +169,24 @@ const App: React.FC = () => {
 
       <AppShell.Main>
         <Container size="xl" py="md">
-          <Transition
-            mounted={activeView === "manager"}
-            transition="fade"
-            duration={200}
-          >
+          <Transition mounted={activeView === "manager"} transition="fade" duration={200}>
             {(styles) => (
-              <div style={{ ...styles, display: activeView === "manager" ? 'block' : 'none' }}>
+              <div style={{ ...styles, display: activeView === "manager" ? "block" : "none" }}>
                 <ServerManager />
               </div>
             )}
           </Transition>
 
-          <Transition
-            mounted={activeView === "json"}
-            transition="fade"
-            duration={200}
-          >
+          <Transition mounted={activeView === "json"} transition="fade" duration={200}>
             {(styles) => (
-              <div style={{ ...styles, display: activeView === "json" ? 'block' : 'none' }}>
+              <div style={{ ...styles, display: activeView === "json" ? "block" : "none" }}>
                 <Container size="lg" py="lg">
                   <Stack>
                     <Group justify="space-between" align="center">
                       <Title order={2} size="h4">
                         Configuration JSON File
                       </Title>
-                      <Button
-                        onClick={loadJsonData}
-                        disabled={isLoading}
-                        variant="light"
-                        radius="md"
-                        size="sm"
-                      >
+                      <Button onClick={loadJsonData} disabled={isLoading} variant="light" radius="md" size="sm">
                         {isLoading ? "Loading..." : "Reload"}
                       </Button>
                     </Group>
@@ -247,8 +239,9 @@ const App: React.FC = () => {
         p="md"
         h={50}
         style={{
-          borderTop: '1px solid',
-          borderColor: colorScheme === 'dark' ? '#2C2E33' : '#e9ecef',
+          borderTop: "1px solid",
+          borderColor: colorScheme === "dark" ? "#2C2E33" : "#e9ecef",
+          backgroundColor: colorScheme === "dark" ? "#1A1B1E" : "#ffffff",
         }}
       >
         <Container size="xl">

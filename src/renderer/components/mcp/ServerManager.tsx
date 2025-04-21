@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from "react"
-import {
-  Container,
-  Title,
-  Group,
-  Paper,
-  Text,
-  Box,
-  Loader,
-  Button,
-  Stack,
-  Table,
-  Tooltip,
-  Flex,
-  Card,
-  Badge,
-  Divider
-} from "@mantine/core"
-import { IconRefresh, IconFilePlus, IconPlus } from '@tabler/icons-react'
+import React, { useEffect, useState } from "react"
+import { Badge, Box, Button, Card, Group, Loader, Stack, Table, Text, Title, Tooltip } from "@mantine/core"
+import { IconFilePlus, IconPlus, IconRefresh } from "@tabler/icons-react"
 import ServerCard from "./ServerCard"
 import ServerDialog from "./ServerDialog"
 import DeleteConfirmDialog from "./DeleteConfirmDialog"
 import ImportJsonDialog from "./ImportJsonDialog"
 import * as mcpService from "../../services/mcpService"
-import { EditableMCPServer, MCPServer, MCPConfig, ServerStatus } from "@/types/mcp"
+import { EditableMCPServer, MCPConfig, MCPServer, ServerStatus } from "@/types/mcp"
 
 const ServerManager: React.FC = () => {
   const [servers, setServers] = useState<Record<string, MCPServer>>({})
@@ -38,7 +22,7 @@ const ServerManager: React.FC = () => {
   const [currentServerId, setCurrentServerId] = useState<string | null>(null)
 
   useEffect(() => {
-    loadServers()
+    loadServers().then()
   }, [])
 
   const loadServers = async () => {
@@ -59,7 +43,7 @@ const ServerManager: React.FC = () => {
       setIsLoading(false)
 
       // Check server statuses in the background
-      checkAllServerStatuses()
+      await checkAllServerStatuses()
     } catch (err: any) {
       setError(err?.message || "Error loading MCP servers")
       setIsLoading(false)
@@ -217,9 +201,7 @@ const ServerManager: React.FC = () => {
           <Title order={2} size="h4" c="red">
             Error Loading Servers
           </Title>
-          <Text c="dimmed">
-            {error}
-          </Text>
+          <Text c="dimmed">{error}</Text>
           <Button variant="light" color="blue" onClick={loadServers} radius="md">
             Try Again
           </Button>
@@ -237,7 +219,7 @@ const ServerManager: React.FC = () => {
               MCP Servers
             </Title>
             <Badge size="md" variant="light">
-              {serverIds.length} {serverIds.length === 1 ? 'server' : 'servers'}
+              {serverIds.length} {serverIds.length === 1 ? "server" : "servers"}
             </Badge>
           </Group>
           <Group>
@@ -284,8 +266,8 @@ const ServerManager: React.FC = () => {
               No MCP Servers Configured
             </Title>
             <Text c="dimmed" ta="center" maw={500}>
-              MCP servers are used to manage your cluster configuration.
-              Add your first server or import from JSON to get started.
+              MCP servers are used to manage your cluster configuration. Add your first server or import from JSON to
+              get started.
             </Text>
             <Group justify="center">
               <Button
@@ -296,11 +278,7 @@ const ServerManager: React.FC = () => {
               >
                 Paste from JSON
               </Button>
-              <Button
-                onClick={() => setIsAddDialogOpen(true)}
-                leftSection={<IconPlus size={16} />}
-                radius="md"
-              >
+              <Button onClick={() => setIsAddDialogOpen(true)} leftSection={<IconPlus size={16} />} radius="md">
                 Add Your First Server
               </Button>
             </Group>

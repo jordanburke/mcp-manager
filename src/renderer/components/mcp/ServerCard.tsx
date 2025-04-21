@@ -1,6 +1,6 @@
 import React from "react"
 import { Table, Badge, Group, Button, Text, ActionIcon, Tooltip, Code } from "@mantine/core"
-import { IconEdit, IconTrash, IconRefresh } from '@tabler/icons-react'
+import { IconEdit, IconTrash, IconRefresh } from "@tabler/icons-react"
 import { MCPServer, ServerStatus } from "@/types/mcp"
 
 interface ServerCardProps {
@@ -53,11 +53,11 @@ const ServerCard: React.FC<ServerCardProps> = ({
 
   // Status badge variant
   const getStatusVariant = () => {
-    return status === ServerStatus.ONLINE ? "filled" : "light";
+    return status === ServerStatus.ONLINE ? "filled" : "light"
   }
 
   return (
-    <Table.Tr style={{ transition: 'background-color 0.2s ease' }}>
+    <Table.Tr style={{ transition: "background-color 0.2s ease" }}>
       {/* Status Badge */}
       <Table.Td>
         <Tooltip label="Click to check status">
@@ -83,23 +83,15 @@ const ServerCard: React.FC<ServerCardProps> = ({
 
       {/* Command Column */}
       <Table.Td>
-        <Code style={{ padding: '4px 8px', borderRadius: '4px' }}>
-          {server.command}
-        </Code>
+        <Code style={{ padding: "4px 8px", borderRadius: "4px" }}>{server.command}</Code>
       </Table.Td>
 
       {/* Args Column */}
       <Table.Td>
         {server.args.length > 0 ? (
-          <Tooltip
-            label={server.args.join(' ')}
-            multiline
-            w={300}
-            withArrow
-            disabled={server.args.length === 0}
-          >
+          <Tooltip label={server.args.join(" ")} multiline w={300} withArrow disabled={server.args.length === 0}>
             <Badge variant="dot" color="blue" size="sm">
-              {server.args.length} {server.args.length === 1 ? 'argument' : 'arguments'}
+              {server.args.length} {server.args.length === 1 ? "argument" : "arguments"}
             </Badge>
           </Tooltip>
         ) : (
@@ -113,14 +105,16 @@ const ServerCard: React.FC<ServerCardProps> = ({
       <Table.Td>
         {numEnvVars > 0 ? (
           <Tooltip
-            label={Object.entries(server.env).map(([key, value]) => `${key}=${value}`).join('\n')}
+            label={Object.entries(server.env)
+              .map(([key, value]) => `${key}=${value}`)
+              .join("\n")}
             multiline
             w={300}
             withArrow
             disabled={numEnvVars === 0}
           >
             <Badge variant="dot" color="teal" size="sm">
-              {numEnvVars} {numEnvVars === 1 ? 'variable' : 'variables'}
+              {numEnvVars} {numEnvVars === 1 ? "variable" : "variables"}
             </Badge>
           </Tooltip>
         ) : (
@@ -134,35 +128,17 @@ const ServerCard: React.FC<ServerCardProps> = ({
       <Table.Td>
         <Group justify="flex-end" gap="xs">
           <Tooltip label="Check status">
-            <ActionIcon
-              variant="light"
-              color="blue"
-              onClick={onCheckStatus}
-              radius="md"
-              size="sm"
-            >
+            <ActionIcon variant="light" color="blue" onClick={onCheckStatus} radius="md" size="sm">
               <IconRefresh size={16} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Edit server">
-            <ActionIcon
-              variant="light"
-              color="blue"
-              onClick={onEdit}
-              radius="md"
-              size="sm"
-            >
+            <ActionIcon variant="light" color="blue" onClick={onEdit} radius="md" size="sm">
               <IconEdit size={16} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Delete server">
-            <ActionIcon
-              variant="light"
-              color="red"
-              onClick={onDelete}
-              radius="md"
-              size="sm"
-            >
+            <ActionIcon variant="light" color="red" onClick={onDelete} radius="md" size="sm">
               <IconTrash size={16} />
             </ActionIcon>
           </Tooltip>
