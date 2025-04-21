@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { MCPServer, EditableMCPServer } from '../../types/mcp';
+import { TextInput, Button, Stack, Group, Text, Badge, Box, Grid } from '@mantine/core';
+import { MCPServer, EditableMCPServer } from '@/types/mcp';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ServerFormProps {
@@ -33,15 +34,14 @@ const ServerForm: React.FC<ServerFormProps> = ({ onSubmit, onCancel, server, ser
   /**
    * Handles changes to the server name input field
    * Updates both the serverName state and the server ID
-   * @param e Input change event
+   * @param value New server name value
    */
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+  const handleNameChange = (value: string) => {
     console.log(`Server name changed to: "${value}"`);
-    
+
     // Update the serverName state
     setServerName(value);
-    
+
     // Update the server ID in the form data
     setFormData(prev => {
       const updated = { ...prev, id: value || uuidv4() };
@@ -64,16 +64,16 @@ const ServerForm: React.FC<ServerFormProps> = ({ onSubmit, onCancel, server, ser
    */
   const addArg = () => {
     const trimmedArg = newArg.trim();
-    
+
     if (!trimmedArg) {
       return;
     }
-    
+
     setFormData(prev => ({
       ...prev,
       args: [...prev.args, trimmedArg]
     }));
-    
+
     setNewArg('');
   };
 
@@ -108,11 +108,11 @@ const ServerForm: React.FC<ServerFormProps> = ({ onSubmit, onCancel, server, ser
   const addEnvVariable = () => {
     const trimmedKey = newEnvKey.trim();
     const trimmedValue = newEnvValue.trim();
-    
+
     if (!trimmedKey || !trimmedValue) {
       return;
     }
-    
+
     setFormData(prev => ({
       ...prev,
       env: {
@@ -120,7 +120,7 @@ const ServerForm: React.FC<ServerFormProps> = ({ onSubmit, onCancel, server, ser
         [trimmedKey]: trimmedValue
       }
     }));
-    
+
     setNewEnvKey('');
     setNewEnvValue('');
   };
@@ -151,271 +151,123 @@ const ServerForm: React.FC<ServerFormProps> = ({ onSubmit, onCancel, server, ser
     }));
   };
 
-  const buttonStyle = {
-    base: {
-      padding: '0.5rem 1rem',
-      borderRadius: '0.25rem',
-      cursor: 'pointer',
-      fontSize: '0.875rem'
-    },
-    primary: {
-      backgroundColor: '#f1f1f1',
-      border: '1px solid #ccc'
-    },
-    secondary: {
-      backgroundColor: 'transparent',
-      border: '1px solid #ccc'
-    }
-  };
-
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div>
-        <label 
-          htmlFor="serverName" 
-          style={{ 
-            display: 'block', 
-            fontSize: '0.875rem', 
-            fontWeight: 500, 
-            marginBottom: '0.25rem' 
-          }}
-        >
-          Server Name
-        </label>
-        <input
-          id="serverName"
-          name="serverName"
-          value={serverName}
-          onChange={handleNameChange}
-          required
+    <form onSubmit={handleSubmit}>
+      <Stack gap="md">
+        <TextInput
+          label="Server Name"
+          description="This name will be used as the server identifier"
           placeholder="Enter a unique name for this server"
-          style={{ 
-            width: '100%', 
-            padding: '0.5rem', 
-            border: '1px solid #ccc', 
-            borderRadius: '0.25rem' 
-          }}
+          value={serverName}
+          onChange={(event) => handleNameChange(event.currentTarget.value)}
+          required
+          size="sm"
         />
-        <small style={{ 
-          display: 'block', 
-          marginTop: '0.25rem', 
-          fontSize: '0.75rem', 
-          color: '#666'
-        }}>
-          This name will be used as the server identifier
-        </small>
-      </div>
 
-      <div>
-        <label 
-          htmlFor="command" 
-          style={{ 
-            display: 'block', 
-            fontSize: '0.875rem', 
-            fontWeight: 500, 
-            marginBottom: '0.25rem' 
-          }}
-        >
-          Command
-        </label>
-        <input
-          id="command"
+        <TextInput
+          label="Command"
+          placeholder="Enter command (e.g., npm run start)"
           name="command"
           value={formData.command}
           onChange={handleChange}
           required
-          placeholder="Enter command (e.g., npm run start)"
-          style={{ 
-            width: '100%', 
-            padding: '0.5rem', 
-            border: '1px solid #ccc', 
-            borderRadius: '0.25rem' 
-          }}
+          size="sm"
         />
-      </div>
 
-      <div>
-        <label 
-          style={{ 
-            display: 'block', 
-            fontSize: '0.875rem', 
-            fontWeight: 500, 
-            marginBottom: '0.25rem' 
-          }}
-        >
-          Arguments
-        </label>
-        <div style={{ display: 'flex', marginTop: '0.25rem', marginBottom: '0.5rem' }}>
-          <input
-            value={newArg}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewArg(e.target.value)}
-            onKeyDown={handleArgKeyPress}
-            placeholder="Add an argument"
-            style={{ 
-              flex: 1, 
-              padding: '0.5rem', 
-              border: '1px solid #ccc', 
-              borderRadius: '0.25rem', 
-              marginRight: '0.5rem' 
-            }}
-          />
-          <button 
-            type="button" 
-            onClick={addArg} 
-            style={{ ...buttonStyle.base, ...buttonStyle.primary }}
-          >
-            Add
-          </button>
-        </div>
-        {formData.args.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
-            {formData.args.map((arg, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  flex: 1, 
-                  backgroundColor: '#f5f5f5', 
-                  padding: '0.5rem', 
-                  borderRadius: '0.25rem' 
-                }}>
-                  {arg}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeArg(index)}
-                  style={{ 
-                    background: 'none',
-                    border: 'none',
-                    padding: '0.25rem 0.5rem',
-                    marginLeft: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        <Box>
+          <Text fw={500} size="sm" mb={5}>Arguments</Text>
+          <Group align="flex-end" mb="xs">
+            <TextInput
+              placeholder="Add an argument"
+              value={newArg}
+              onChange={(event) => setNewArg(event.currentTarget.value)}
+              onKeyDown={handleArgKeyPress}
+              style={{ flex: 1 }}
+              size="sm"
+            />
+            <Button size="xs" onClick={addArg}>Add</Button>
+          </Group>
 
-      <div>
-        <label 
-          style={{ 
-            display: 'block', 
-            fontSize: '0.875rem', 
-            fontWeight: 500, 
-            marginBottom: '0.25rem' 
-          }}
-        >
-          Environment Variables
-        </label>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 1fr', 
-          gap: '0.5rem', 
-          marginTop: '0.25rem', 
-          marginBottom: '0.5rem' 
-        }}>
-          <input
-            value={newEnvKey}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEnvKey(e.target.value)}
-            onKeyDown={handleEnvKeyPress}
-            placeholder="Key"
-            style={{ 
-              padding: '0.5rem', 
-              border: '1px solid #ccc', 
-              borderRadius: '0.25rem' 
-            }}
-          />
-          <input
-            value={newEnvValue}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewEnvValue(e.target.value)}
-            onKeyDown={handleEnvKeyPress}
-            placeholder="Value"
-            style={{ 
-              padding: '0.5rem', 
-              border: '1px solid #ccc', 
-              borderRadius: '0.25rem' 
-            }}
-          />
-        </div>
-        <button 
-          type="button" 
-          onClick={addEnvVariable} 
-          style={{ 
-            ...buttonStyle.base, 
-            ...buttonStyle.primary,
-            marginTop: '0.25rem' 
-          }}
-        >
-          Add Variable
-        </button>
-        
-        {Object.keys(formData.env).length > 0 && (
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            gap: '0.5rem', 
-            marginTop: '0.5rem' 
-          }}>
-            {Object.entries(formData.env).map(([key, value]) => (
-              <div key={key} style={{ display: 'flex', alignItems: 'center' }}>
-                <div style={{ 
-                  flex: 1, 
-                  backgroundColor: '#f5f5f5', 
-                  padding: '0.5rem', 
-                  borderRadius: '0.25rem' 
-                }}>
-                  <span style={{ fontWeight: 600 }}>{key}</span>: {value}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removeEnvVariable(key)}
-                  style={{ 
-                    background: 'none',
-                    border: 'none',
-                    padding: '0.25rem 0.5rem',
-                    marginLeft: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+          {formData.args.length > 0 && (
+            <Stack gap="xs" mt="xs">
+              {formData.args.map((arg, index) => (
+                <Group key={index} justify="space-between" wrap="nowrap">
+                  <Badge size="lg" radius="sm" py={12} style={{ flex: 1, textAlign: 'left' }}>
+                    {arg}
+                  </Badge>
+                  <Button
+                    variant="subtle"
+                    color="gray"
+                    size="xs"
+                    onClick={() => removeArg(index)}
+                  >
+                    Remove
+                  </Button>
+                </Group>
+              ))}
+            </Stack>
+          )}
+        </Box>
 
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'flex-end', 
-        gap: '0.5rem', 
-        paddingTop: '1rem' 
-      }}>
-        <button 
-          type="button" 
-          onClick={onCancel} 
-          style={{ ...buttonStyle.base, ...buttonStyle.secondary }}
-        >
-          Cancel
-        </button>
-        <button 
-          type="submit" 
-          style={{ 
-            ...buttonStyle.base, 
-            backgroundColor: '#1a1a1a', 
-            border: '1px solid #1a1a1a',
-            color: 'white'
-          }}
-        >
-          {server ? 'Update' : 'Add'} Server
-        </button>
-      </div>
+        <Box>
+          <Text fw={500} size="sm" mb={5}>Environment Variables</Text>
+          <Grid mb="xs">
+            <Grid.Col span={6}>
+              <TextInput
+                placeholder="Key"
+                value={newEnvKey}
+                onChange={(event) => setNewEnvKey(event.currentTarget.value)}
+                onKeyDown={handleEnvKeyPress}
+                size="sm"
+              />
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <TextInput
+                placeholder="Value"
+                value={newEnvValue}
+                onChange={(event) => setNewEnvValue(event.currentTarget.value)}
+                onKeyDown={handleEnvKeyPress}
+                size="sm"
+              />
+            </Grid.Col>
+          </Grid>
+
+          <Button size="xs" onClick={addEnvVariable} mb="xs">
+            Add Variable
+          </Button>
+
+          {Object.keys(formData.env).length > 0 && (
+            <Stack gap="xs" mt="xs">
+              {Object.entries(formData.env).map(([key, value]) => (
+                <Group key={key} justify="space-between" wrap="nowrap">
+                  <Badge size="lg" radius="sm" py={12} style={{ flex: 1, textAlign: 'left' }}>
+                    <Text span fw={600}>{key}</Text>: {value}
+                  </Badge>
+                  <Button
+                    variant="subtle"
+                    color="gray"
+                    size="xs"
+                    onClick={() => removeEnvVariable(key)}
+                  >
+                    Remove
+                  </Button>
+                </Group>
+              ))}
+            </Stack>
+          )}
+        </Box>
+
+        <Group justify="flex-end" gap="sm" mt="md">
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            {server ? 'Update' : 'Add'} Server
+          </Button>
+        </Group>
+      </Stack>
     </form>
   );
 };
 
-export default ServerForm; 
+export default ServerForm;

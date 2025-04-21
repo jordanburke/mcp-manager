@@ -1,4 +1,5 @@
 import React from 'react';
+import { Modal, Title, Text } from '@mantine/core';
 import { MCPServer, EditableMCPServer } from '../../types/mcp';
 import ServerForm from './ServerForm';
 
@@ -19,63 +20,34 @@ const ServerDialog: React.FC<ServerDialogProps> = ({
   serverId,
   title,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 50,
-      padding: '1rem'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        borderRadius: '0.5rem',
-        border: '1px solid #ccc',
-        maxWidth: '28rem',
-        width: '100%',
-        maxHeight: '90vh',
-        overflow: 'auto'
-      }}>
-        <div style={{ padding: '1.5rem' }}>
-          <h2 style={{ 
-            fontSize: '1.25rem', 
-            fontWeight: 600, 
-            marginBottom: '1rem', 
-            paddingBottom: '0.5rem', 
-            borderBottom: '1px solid #eee' 
-          }}>
-            {title}
-          </h2>
-          
-          {/* Note about editing the server name */}
-          {server && (
-            <p style={{ 
-              fontSize: '0.875rem',
-              color: '#666',
-              marginBottom: '1rem'
-            }}>
-              You can change the server identifier by updating the Server Name field.
-            </p>
-          )}
-          
-          <ServerForm
-            server={server}
-            serverId={serverId}
-            onSubmit={onSubmit}
-            onCancel={onClose}
-          />
-        </div>
-      </div>
-    </div>
+    <Modal 
+      opened={isOpen} 
+      onClose={onClose} 
+      title={<Title order={3}>{title}</Title>}
+      size="md"
+      centered
+      overlayProps={{
+        opacity: 0.55,
+        blur: 3,
+      }}
+      padding="md"
+    >
+      {/* Note about editing the server name */}
+      {server && (
+        <Text size="sm" color="dimmed" mb="md">
+          You can change the server identifier by updating the Server Name field.
+        </Text>
+      )}
+      
+      <ServerForm
+        server={server}
+        serverId={serverId}
+        onSubmit={onSubmit}
+        onCancel={onClose}
+      />
+    </Modal>
   );
 };
 
-export default ServerDialog; 
-
-
-
+export default ServerDialog;
