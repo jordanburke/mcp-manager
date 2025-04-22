@@ -13,6 +13,24 @@ MCP Manager is an Electron-based desktop application for managing Model Context 
 - 🛠️ **Advanced Configuration**: Customize command, arguments, and environment variables for each server.
 - 📋 **JSON Import/Export**: Import and export server configurations in JSON format.
 - 🔍 **Direct JSON Editing**: View and edit the raw configuration file if needed.
+- 🎨 **Modern UI**: Sleek, responsive interface with light and dark mode support.
+- 🧩 **Component-Based Architecture**: Modular design for easy maintenance and extensibility.
+
+## UI Features
+
+- 🌓 **Theme Switching**: Toggle between light, dark, and system themes.
+- 🎭 **Smooth Transitions**: Animated transitions between views for a polished user experience.
+- 📱 **Responsive Design**: Adapts to different screen sizes and resolutions.
+- 🧠 **Intuitive UX**: Clear visual hierarchy and interactive elements for better usability.
+- 🛠️ **Tooltips and Helpers**: Contextual information to guide users through the application.
+
+## Technology Stack
+
+- **Frontend Framework**: [React](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
+- **UI Component Library**: [Mantine](https://mantine.dev/) for modern, accessible components
+- **Icons**: [Tabler Icons](https://tabler-icons.io/) for consistent, clean iconography
+- **Desktop Framework**: [Electron](https://www.electronjs.org/) for cross-platform compatibility
+- **Build System**: [Vite](https://vitejs.dev/) for fast development and optimized builds
 
 ## Installation
 
@@ -75,10 +93,21 @@ This will launch both the Vite development server for the React frontend and the
 ### Project Structure
 
 - `src/renderer`: React application code (UI components)
-- `src/renderer/components`: React components
+- `src/renderer/components`: React components organized by feature
 - `src/renderer/services`: Services for managing configuration and server communication
 - `src/renderer/types`: TypeScript type definitions
 - `electron`: Electron main process code
+
+### UI Components
+
+The application uses a component-based architecture with Mantine UI:
+
+- **AppShell**: Main layout container with header, footer, and content areas
+- **ServerManager**: Central component for managing MCP servers
+- **ServerCard**: Individual server display with status and actions
+- **ServerDialog**: Form for adding and editing servers
+- **DeleteConfirmDialog**: Confirmation dialog for server deletion
+- **ImportJsonDialog**: Dialog for importing server configurations from JSON
 
 ### Testing
 
@@ -120,4 +149,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Built with [Electron](https://www.electronjs.org/)
 - Frontend developed with [React](https://reactjs.org/) and [TypeScript](https://www.typescriptlang.org/)
-- UI styled with CSS-in-JS techniques
+- UI components from [Mantine](https://mantine.dev/)
+- Icons from [Tabler Icons](https://tabler-icons.io/)
+- Build system powered by [Vite](https://vitejs.dev/)
