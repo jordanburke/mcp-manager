@@ -8,6 +8,13 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/renderer/test/setup.ts"],
+    server: {
+      deps: {
+        inline: ["@mantine/core", "@mantine/hooks"]
+      }
+    },
+    reporters: ['default'],
+    testTimeout: 5000,
   },
   resolve: {
     alias: {

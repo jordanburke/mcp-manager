@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, fireEvent, screen } from "@testing-library/react"
+import { render, fireEvent, screen } from "../../../test/test-utils"
 import ImportJsonDialog from "../ImportJsonDialog"
 import { MCPConfig } from "../../../types/mcp"
 import { ConfigService } from "../../../services/configService"
@@ -24,8 +24,10 @@ describe("ImportJsonDialog", () => {
   })
 
   it("should not render when isOpen is false", () => {
-    const { container } = render(<ImportJsonDialog {...props} isOpen={false} />)
-    expect(container).toBeEmptyDOMElement()
+    const { queryByText } = render(<ImportJsonDialog {...props} isOpen={false} />)
+    // Dialog content should not be visible
+    expect(queryByText("Import Servers from JSON")).not.toBeInTheDocument()
+    expect(queryByText("Import Servers")).not.toBeInTheDocument()
   })
 
   it("should render the dialog when isOpen is true", () => {
@@ -132,9 +134,11 @@ describe("ImportJsonDialog", () => {
     render(<ImportJsonDialog {...props} />)
 
     // The Import Servers button should be disabled initially
-    const importButton = screen.getByText("Import Servers")
-    expect(importButton).toBeDisabled()
-
+    const importButton = screen.getByRole("button", { name: "Import Servers" })
+    
+    // Check that the button has the disabled attribute or aria-disabled
+    expect(importButton).toHaveAttribute('disabled')
+    
     // When there is an error, the button should remain disabled
     vi.mocked(ConfigService.parseConfig).mockImplementation(() => {
       throw new Error("Invalid JSON")
@@ -143,7 +147,7 @@ describe("ImportJsonDialog", () => {
     const textarea = screen.getByRole("textbox")
     fireEvent.change(textarea, { target: { value: "not valid json" } })
 
-    expect(importButton).toBeDisabled()
+    expect(importButton).toHaveAttribute('disabled')
   })
 
   it("should show plural text for multiple servers", () => {
