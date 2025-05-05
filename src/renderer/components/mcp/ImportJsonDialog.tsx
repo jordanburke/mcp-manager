@@ -42,7 +42,7 @@ const ImportJsonDialog: React.FC<ImportJsonDialogProps> = ({ isOpen, onClose, on
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Title order={3}>Import Servers from JSON</Title>}
+      title={<Text size="md" fw={500}>Import Servers from JSON</Text>}
       size="lg"
       centered
       overlayProps={{

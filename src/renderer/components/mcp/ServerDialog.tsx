@@ -17,7 +17,7 @@ const ServerDialog: React.FC<ServerDialogProps> = ({ isOpen, onClose, onSubmit, 
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Title order={3}>{title}</Title>}
+      title={<Text size="md" fw={500}>{title}</Text>}
       size="md"
       centered
       overlayProps={{

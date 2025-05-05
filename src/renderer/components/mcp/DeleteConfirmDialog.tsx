@@ -13,7 +13,7 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ isOpen, onClo
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Title order={3}>Delete Server</Title>}
+      title={<Text size="md" fw={500}>Delete Server</Text>}
       size="sm"
       centered
       overlayProps={{
