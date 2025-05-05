@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom"
-import { expect, vi } from "vitest"
+import { vi } from "vitest"
 
 // No need to explicitly extend matchers as they are automatically added by the import
 

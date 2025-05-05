@@ -1,4 +1,4 @@
-import { MCPConfig, MCPServer } from "../types/mcp"
+import { MCPConfig, MCPServer } from "@/types/mcp"
 
 /**
  * Clase para validar y procesar la configuración de MCP
@@ -12,6 +12,8 @@ export class ConfigService {
       const parsed = JSON.parse(jsonString)
       return this.validateAndNormalizeConfig(parsed)
     } catch (error) {
+      console.error("Error parsing JSON:", error)
+      // Return default config if parsing fails
       return this.createDefaultConfig()
     }
   }
