@@ -1,5 +1,5 @@
 import React from "react"
-import { Table, Badge, Group, Button, Text, ActionIcon, Tooltip, Code } from "@mantine/core"
+import { Table, Badge, Group, Text, ActionIcon, Tooltip, Code } from "@mantine/core"
 import { IconEdit, IconTrash, IconRefresh } from "@tabler/icons-react"
 import { MCPServer, ServerStatus } from "@/types/mcp"
 

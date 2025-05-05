@@ -13,7 +13,7 @@ import {
   Button,
   SegmentedControl,
   useMantineColorScheme,
-  rem,
+  // rem,
   Transition,
   Flex,
   MantineColorScheme,
@@ -79,6 +79,7 @@ const App: React.FC = () => {
         setJsonData(formattedJson)
         setJsonError(null)
       } catch (error) {
+        console.error("Error formatting JSON:", error)
         // If it's not a valid JSON, show the plain text
         setJsonData(jsonData)
         setJsonError("The file does not contain valid JSON")

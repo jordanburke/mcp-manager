@@ -27,7 +27,7 @@ const colorMapping = {
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "default", size = "md", asChild = false, color, ...props }, ref) => {
+  ({ className, variant = "default", size = "md", color, ...props }, ref) => {
     // Map our custom variants to Mantine variants
     const mantineVariant = variantMapping[variant as keyof typeof variantMapping] || "filled"
 

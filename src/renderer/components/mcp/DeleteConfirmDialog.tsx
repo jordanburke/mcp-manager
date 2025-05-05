@@ -1,5 +1,5 @@
 import React from "react"
-import { Modal, Title, Text, Group, Button } from "@mantine/core"
+import { Modal, Text, Group, Button } from "@mantine/core"
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean
@@ -13,7 +13,11 @@ const DeleteConfirmDialog: React.FC<DeleteConfirmDialogProps> = ({ isOpen, onClo
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text size="md" fw={500}>Delete Server</Text>}
+      title={
+        <Text size="md" fw={500}>
+          Delete Server
+        </Text>
+      }
       size="sm"
       centered
       overlayProps={{

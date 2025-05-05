@@ -136,7 +136,7 @@ function createMenu() {
     },
   ]
 
-  const menu = Menu.buildFromTemplate(template as any)
+  const menu = Menu.buildFromTemplate(template as unknown[])
   Menu.setApplicationMenu(menu)
 }
 
@@ -247,12 +247,31 @@ async function checkCommandAvailability(command: string): Promise<boolean> {
 }
 
 // Check if an MCP server is responding
-async function checkMCPServerConnection(server: any): Promise<boolean> {
+async function checkMCPServerConnection(server: unknown): Promise<boolean> {
+  // Type guard to check if object has the shape of an MCPServer
+  function isMCPServer(obj: unknown): obj is { command: string; args: string[]; env: { [key: string]: string } } {
+    return (
+      obj !== null &&
+      typeof obj === "object" &&
+      "args" in obj &&
+      Array.isArray((obj as any).args) &&
+      "env" in obj &&
+      typeof (obj as any).env === "object"
+    )
+  }
+
   // For MCP servers, we'll try to make a simple MCP connection
   // This is a simplified implementation - in a real-world scenario,
   // you would need to follow the MCP protocol more precisely
   return new Promise((resolve) => {
     try {
+      // Ensure the server is a valid MCP server
+      if (!isMCPServer(server)) {
+        console.error("Invalid server configuration")
+        resolve(false)
+        return
+      }
+
       // Extract port from environment variables or command line arguments
       let port = 0
 

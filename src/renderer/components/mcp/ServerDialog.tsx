@@ -1,6 +1,6 @@
 import React from "react"
-import { Modal, Title, Text } from "@mantine/core"
-import { MCPServer, EditableMCPServer } from "../../types/mcp"
+import { Modal, Text } from "@mantine/core"
+import { MCPServer, EditableMCPServer } from "@/types/mcp"
 import ServerForm from "./ServerForm"
 
 interface ServerDialogProps {
@@ -17,7 +17,11 @@ const ServerDialog: React.FC<ServerDialogProps> = ({ isOpen, onClose, onSubmit, 
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text size="md" fw={500}>{title}</Text>}
+      title={
+        <Text size="md" fw={500}>
+          {title}
+        </Text>
+      }
       size="md"
       centered
       overlayProps={{

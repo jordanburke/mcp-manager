@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react"
-import { Modal, Title, Text, Textarea, Alert, Group, Button } from "@mantine/core"
+import { Modal, Text, Textarea, Alert, Group, Button } from "@mantine/core"
 import { MCPConfig } from "@/types/mcp"
 import { ConfigService } from "@/services/configService"
 
@@ -42,7 +42,11 @@ const ImportJsonDialog: React.FC<ImportJsonDialogProps> = ({ isOpen, onClose, on
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={<Text size="md" fw={500}>Import Servers from JSON</Text>}
+      title={
+        <Text size="md" fw={500}>
+          Import Servers from JSON
+        </Text>
+      }
       size="lg"
       centered
       overlayProps={{

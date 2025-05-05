@@ -47,7 +47,7 @@ describe("ImportJsonDialog", () => {
         },
       },
     }
-    ;(ConfigService.parseConfig as any).mockReturnValue(mockConfig)
+    vi.mocked(ConfigService.parseConfig).mockReturnValue(mockConfig)
 
     render(<ImportJsonDialog {...props} />)
 
@@ -74,7 +74,7 @@ describe("ImportJsonDialog", () => {
 
   it("should show an error message when invalid JSON is entered", () => {
     // Mock the parseConfig to throw an error
-    ;(ConfigService.parseConfig as any).mockImplementation(() => {
+    vi.mocked(ConfigService.parseConfig).mockImplementation(() => {
       throw new Error("Invalid JSON")
     })
 
@@ -99,7 +99,7 @@ describe("ImportJsonDialog", () => {
         },
       },
     }
-    ;(ConfigService.parseConfig as any).mockReturnValue(mockConfig)
+    vi.mocked(ConfigService.parseConfig).mockReturnValue(mockConfig)
 
     render(<ImportJsonDialog {...props} />)
 
@@ -136,7 +136,7 @@ describe("ImportJsonDialog", () => {
     expect(importButton).toBeDisabled()
 
     // When there is an error, the button should remain disabled
-    ;(ConfigService.parseConfig as any).mockImplementation(() => {
+    vi.mocked(ConfigService.parseConfig).mockImplementation(() => {
       throw new Error("Invalid JSON")
     })
 
@@ -162,7 +162,7 @@ describe("ImportJsonDialog", () => {
         },
       },
     }
-    ;(ConfigService.parseConfig as any).mockReturnValue(mockConfig)
+    vi.mocked(ConfigService.parseConfig).mockReturnValue(mockConfig)
 
     render(<ImportJsonDialog {...props} />)
 

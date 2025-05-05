@@ -3,21 +3,25 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Build Commands
+
 - `npm run dev`: Run development server (Vite + Electron)
 - `npm run build`: Build both frontend and Electron app
 - `npm run dist`: Create distributable packages
 
 ## Test Commands
+
 - `npm test`: Run all tests
 - `npm test -- -t "test name"`: Run a specific test
 - `npm run test:watch`: Run tests in watch mode
 - `npm run test:coverage`: Generate coverage report
 
 ## Lint Commands
+
 - `npm run lint`: Run ESLint
 - `npm run lint:format`: Format code with Prettier
 
 ## Code Style Guidelines
+
 - Use TypeScript with strict typing
 - 2-space indentation, semicolons, double quotes
 - PascalCase for components/interfaces, camelCase for variables/functions

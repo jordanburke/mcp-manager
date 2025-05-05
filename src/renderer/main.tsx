@@ -6,8 +6,7 @@ import "./styles/globals.css"
 import "@mantine/core/styles.css"
 
 // Ensure Electron's IPC is available in the renderer context
-// @ts-ignore
-window.electron = window.electron || { ipcRenderer: require("electron").ipcRenderer }
+window.electron = window.electron || { ipcRenderer: window.require ? window.require("electron").ipcRenderer : null }
 
 // Create Mantine theme
 const theme = createTheme({
