@@ -1,8 +1,7 @@
-import { exec } from "child_process"
-import { app, BrowserWindow, ipcMain, Menu, shell } from "electron"
+import {exec} from "child_process"
+import {app, BrowserWindow, ipcMain, Menu, shell} from "electron"
 import isDev from "electron-is-dev"
 import fs from "fs"
-import net from "net"
 import path from "path"
 
 // Keep a global reference of the window object to prevent the window from being automatically closed when the JavaScript object is garbage collected.
@@ -194,8 +193,7 @@ app.whenReady().then(() => {
       }
 
       // Read the file
-      const data = await fs.promises.readFile(claudeConfigPath, "utf8")
-      return data
+      return await fs.promises.readFile(claudeConfigPath, "utf8")
     } catch (error) {
       console.error("Error reading Claude config:", error)
       throw new Error(`Failed to read Claude configuration: ${error.message}`)
@@ -205,19 +203,106 @@ app.whenReady().then(() => {
   // Ping an MCP server to check if it's running
   ipcMain.handle("ping-mcp-server", async (event, serverId, server) => {
     try {
-      // First, check if the command exists
-      const isCommandAvailable = await checkCommandAvailability(server.command)
-      if (!isCommandAvailable) {
-        console.warn(`Command not available: ${server.command}`)
-        return { success: false, error: "Command not available" }
+      console.log(`Checking status for MCP server: ${serverId}`)
+      
+      // Extract command details for better process matching
+      const baseCommand = server.command.split(' ')[0]; // Base command (e.g., python, node)
+      const scriptName = server.command.split(' ').length > 1 ? 
+                         server.command.split(' ')[1] : ''; // Script name if present
+      
+      // Extract any distinctive argument that might help identify this specific process
+      let distinctiveArg = '';
+      if (Array.isArray(server.args) && server.args.length > 0) {
+        // Find a distinctive argument by looking for one with a non-common name
+        // Avoid arguments like --port, --host which are common across many processes
+        distinctiveArg = server.args.find(arg => 
+          !arg.startsWith('--port') && 
+          !arg.startsWith('--host') && 
+          !arg.startsWith('-p') && 
+          !arg.startsWith('-h')
+        ) || server.args[0]; // Fallback to first arg if no distinctive one found
       }
-
-      // Try to connect to the server using the Model Context Protocol
-      const pingSuccess = await checkMCPServerConnection(server)
-      return { success: pingSuccess }
+      
+      console.log(`Looking for process: ${baseCommand} with script: ${scriptName} and distinctive arg: ${distinctiveArg}`);
+      
+      // Use different commands based on the platform
+      const platform = process.platform;
+      let cmd = '';
+      
+      if (platform === 'win32') {
+        // Windows approach - check for the process and check the details
+        cmd = `tasklist /FI "IMAGENAME eq ${baseCommand}*" /NH`;
+      } else {
+        // Unix-based approach - more precise with grep to include distinctive elements
+        // If we have a script name, include it in the search to be more specific
+        let grepPattern = baseCommand;
+        
+        if (scriptName) {
+          grepPattern += `.*${scriptName}`;
+        }
+        
+        // If we have a distinctive argument, include that too
+        if (distinctiveArg) {
+          grepPattern += `.*${distinctiveArg}`;
+        }
+        
+        cmd = `ps aux | grep "${grepPattern}" | grep -v grep`;
+      }
+      
+      console.log(`Executing: ${cmd}`);
+      
+      // Execute the status check and return details
+      return new Promise((resolve) => {
+        exec(cmd, (error, stdout) => {
+          // Process the output
+          const output = stdout.trim();
+          
+          // Check if we found any matching process
+          if (error || !output) {
+            console.log(`No matching process found for server: ${serverId}`);
+            resolve({ 
+              success: false,
+              details: { 
+                command: server.command,
+                found: false 
+              }
+            });
+            return;
+          }
+          
+          // We found matching processes!
+          const processLines = output.split('\\n');
+          const processCount = processLines.length;
+          
+          console.log(`Found ${processCount} matching process(es) for server: ${serverId}`);
+          
+          // Log the first few lines of process info for debugging
+          if (processCount > 0) {
+            console.log('Process details:');
+            processLines.slice(0, Math.min(3, processCount)).forEach(line => {
+              console.log(`- ${line.substring(0, 100)}...`);
+            });
+          }
+          
+          resolve({ 
+            success: true, 
+            details: {
+              command: server.command,
+              found: true,
+              count: processCount,
+              // Include sample of process info for debugging
+              sample: processLines.length > 0 ? processLines[0].substring(0, 100) : ''
+            }
+          });
+        });
+      });
     } catch (error) {
       console.error(`Error pinging MCP server ${serverId}:`, error)
-      return { success: false, error: error.message }
+      return { 
+        success: false, 
+        error: error.message,
+        details: { command: server.command, found: false }
+      }
     }
   })
 
@@ -229,104 +314,6 @@ app.whenReady().then(() => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
-
-// Check if a command is available in the system
-async function checkCommandAvailability(command: string): Promise<boolean> {
-  return new Promise((resolve) => {
-    const platform = process.platform
-    const cmd = platform === "win32" ? "where" : "which"
-
-    exec(`${cmd} ${command}`, (error) => {
-      if (error) {
-        resolve(false)
-      } else {
-        resolve(true)
-      }
-    })
-  })
-}
-
-// Check if an MCP server is responding
-async function checkMCPServerConnection(server: unknown): Promise<boolean> {
-  // Type guard to check if object has the shape of an MCPServer
-  function isMCPServer(obj: unknown): obj is { command: string; args: string[]; env: { [key: string]: string } } {
-    return (
-      obj !== null &&
-      typeof obj === "object" &&
-      "args" in obj &&
-      Array.isArray((obj as any).args) &&
-      "env" in obj &&
-      typeof (obj as any).env === "object"
-    )
-  }
-
-  // For MCP servers, we'll try to make a simple MCP connection
-  // This is a simplified implementation - in a real-world scenario,
-  // you would need to follow the MCP protocol more precisely
-  return new Promise((resolve) => {
-    try {
-      // Ensure the server is a valid MCP server
-      if (!isMCPServer(server)) {
-        console.error("Invalid server configuration")
-        resolve(false)
-        return
-      }
-
-      // Extract port from environment variables or command line arguments
-      let port = 0
-
-      // Try to find port in environment variables
-      if (server.env && server.env.MCP_PORT) {
-        port = parseInt(server.env.MCP_PORT, 10)
-      }
-
-      // Otherwise try to find port in command line arguments (simple check)
-      if (!port && Array.isArray(server.args)) {
-        for (let i = 0; i < server.args.length; i++) {
-          if (server.args[i].includes("--port=")) {
-            const portArg = server.args[i].split("=")[1]
-            port = parseInt(portArg, 10)
-            break
-          }
-          if (server.args[i] === "--port" && i < server.args.length - 1) {
-            port = parseInt(server.args[i + 1], 10)
-            break
-          }
-        }
-      }
-
-      // If we couldn't determine a port, assume port 8080 as fallback
-      if (!port || isNaN(port)) {
-        port = 8080
-      }
-
-      // Try to connect to the port
-      const socket = new net.Socket()
-
-      socket.setTimeout(1000) // 1 second timeout
-
-      socket.on("connect", () => {
-        socket.destroy()
-        resolve(true)
-      })
-
-      socket.on("timeout", () => {
-        socket.destroy()
-        resolve(false)
-      })
-
-      socket.on("error", () => {
-        socket.destroy()
-        resolve(false)
-      })
-
-      socket.connect(port, "localhost")
-    } catch (error) {
-      console.error("Error checking server connection:", error)
-      resolve(false)
-    }
-  })
-}
 
 // Quit when all windows are closed, except on macOS. There, it's common for applications and their menu bar to stay active until the user quits explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
